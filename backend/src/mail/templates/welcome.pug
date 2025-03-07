@@ -1,0 +1,15 @@
+doctype html
+html
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Welcome to Our Platform
+  body(style="font-family: Arial, sans-serif; background-color: #f4f4f4; text-align: center; padding: 20px;")
+    .container(style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); max-width: 500px; margin: auto;")
+      h1(style="color: red;") Welcome, #{user.firstname}!
+      p Thank you for joining our platform. We're excited to have you on board!
+      p Click the button below to get started.
+      a(href="#{activationLink}" style="display: inline-block; background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px;") Activate Your Account
+      p If you did not sign up, you can ignore this email.
+      p Best Regards,
+      p The Team
