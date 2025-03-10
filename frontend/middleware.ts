@@ -7,6 +7,7 @@ const intlMiddleware = createMiddleware(routing);
 
 // Backend API URL for verifying refresh tokens
 const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-refresh-token`;
+// const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-refresh-token`;
 
 export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;
@@ -29,7 +30,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect authenticated users away from auth routes
-  if (refreshToken && isAuthRoute) {
+  if (refreshToken && isAuthRoute && (await verifyRefreshToken(refreshToken))) {
     const from =
       request.nextUrl.searchParams.get("from") || `/${siteLocale}/dashboard`;
     return NextResponse.redirect(new URL(from, request.url));
@@ -37,7 +38,7 @@ export async function middleware(request: NextRequest) {
 
   // Run the internationalization middleware first
   const intlResponse = intlMiddleware(request);
-  if (intlResponse) return intlResponse;
+  if (intlResponse && intlResponse.status !== 200) return intlResponse;
 
   // Redirect "/" to the localized dashboard
   if (pathname === "/" || pathname === `/${siteLocale}`) {
@@ -61,7 +62,8 @@ async function verifyRefreshToken(token: string): Promise<boolean> {
     if (!response.ok) return false;
 
     const data = await response.json();
-    return data;
+    console.log("Token verification response:", data);
+    return data?.isValid === true;
   } catch (error) {
     console.error("Error verifying refresh token:", error);
     return false;

@@ -16,9 +16,9 @@ import { ConfigProvider, Menu, Tooltip } from "antd";
 import React, { JSX, useEffect, useState } from "react";
 import { useGetAllPagesQuery } from "@/redux/api/pageApiSlice";
 import { Page } from "@/utils/interfaces";
-import { useLocale } from "next-intl";
 import { customPages } from "@/constants/sidebar.constant";
 import { useLogoutMutation } from "@/redux/api";
+import { usePathname as useNextPathname } from "next/navigation";
 
 type Props = {};
 
@@ -54,13 +54,14 @@ type MenuItem = {
 };
 
 const Sidebar = (props: Props) => {
+  const nextPathname = useNextPathname();
   const { isNavCollapsed } = useAppSelector((state) => state.sidebar);
   const [activeTopKey, setActiveTopKey] = useState("/");
   const [openKeys, setOpenKeys] = useState<string[]>([]);
   const [activeSubKey, setActiveSubKey] = useState<string | null>(null);
-  const pathname = usePathname();
-  const locale = useLocale() as "en" | "ru" | "tr";
   const [logoutFn] = useLogoutMutation(undefined);
+
+  const locale = nextPathname.split("/")[1] as "en" | "tr" | "ru";
 
   const { data: getAllPagesData } = useGetAllPagesQuery(undefined, {
     refetchOnFocus: true,
@@ -71,26 +72,26 @@ const Sidebar = (props: Props) => {
   const mapPagesToMenuItems = (pages: Page[]): MenuItem[] => {
     return pages?.map((page) => {
       const menuItem: MenuItem = {
-        key: page.slug,
-        label: page.title[locale],
-        icon: getIcon(page.slug),
+        key: page?.slug,
+        label: page?.title[locale],
+        icon: getIcon(page?.slug),
       };
 
       // If the page has subPages, we process them into nested items
       if (
-        page.subPages.length > 0 &&
-        page.slug !== "blog" &&
-        page.slug !== "projects" &&
-        page.slug !== "about" &&
-        page.slug !== "360"
+        page?.subPages?.length > 0 &&
+        page?.slug !== "blog" &&
+        page?.slug !== "projects" &&
+        page?.slug !== "about" &&
+        page?.slug !== "360"
       ) {
-        menuItem.items = page.subPages.map((subPage) => ({
-          key: subPage.slug,
-          label: subPage.title[locale], // Assuming English as the default label
-          link: `/dashboard/${page.slug}/${subPage.slug}`,
+        menuItem.items = page?.subPages.map((subPage) => ({
+          key: subPage?.slug,
+          label: subPage?.title[locale], // Assuming English as the default label
+          link: `/dashboard/${page?.slug}/${subPage?.slug}`,
         }));
       } else {
-        menuItem.link = `/dashboard/${page.slug}`;
+        menuItem.link = `/dashboard/${page?.slug}`;
       }
 
       return menuItem;
@@ -100,22 +101,24 @@ const Sidebar = (props: Props) => {
   // Render menu items recursively
   const renderMenuItems = (items: any) =>
     items?.map((item: any) => {
-      if (item.items) {
+      if (item?.items) {
         return {
-          key: item.key,
-          icon: item.icon,
-          label: item.label,
-          children: renderMenuItems(item.items),
+          key: item?.key,
+          icon: item?.icon,
+          label: item?.label,
+          children: renderMenuItems(item?.items),
         };
       }
 
       return {
-        key: item.key,
-        icon: item.icon,
-        label: item.link ? (
-          <Link href={item.link}>{item.label}</Link>
+        key: item?.key,
+        icon: item?.icon,
+        label: item?.link ? (
+          <Link locale={locale} href={item.link}>
+            {item?.label}
+          </Link>
         ) : (
-          item.label
+          item?.label
         ),
       };
     });
@@ -132,23 +135,24 @@ const Sidebar = (props: Props) => {
 
   useEffect(() => {
     // Find active top-level menu item
+    const exactPath = `/${nextPathname?.split("/")?.slice(2)?.join("/")}`;
     const activeMenuItem = mapPagesToMenuItems([
       ...customPages,
-      ...getAllPagesData,
+      ...(getAllPagesData || []),
     ])?.find((item) => {
-      if (item.link) return pathname === item.link;
-      return item.items?.some((subItem) => pathname === subItem.link);
+      if (item.link) return exactPath === item.link;
+      return item.items?.some((subItem) => exactPath === subItem.link);
     });
 
     // Extract submenu key if applicable
     const activeSubItem = activeMenuItem?.items?.find(
-      (subItem) => subItem.link === pathname
+      (subItem) => subItem.link === exactPath
     );
 
     setActiveTopKey(activeMenuItem?.key || "");
     setActiveSubKey(activeSubItem?.key || null);
     setOpenKeys(activeSubItem ? [activeMenuItem?.key as string] : []);
-  }, [pathname]);
+  }, [nextPathname]);
 
   return (
     <div
@@ -183,7 +187,7 @@ const Sidebar = (props: Props) => {
             inlineCollapsed={isNavCollapsed}
             className="text-base !bg-white dark:!bg-[#1e293b]"
             items={renderMenuItems(
-              mapPagesToMenuItems([...customPages, ...getAllPagesData])
+              mapPagesToMenuItems([...customPages, ...(getAllPagesData || [])])
             )}
             openKeys={openKeys}
             onOpenChange={handleOpenChange}

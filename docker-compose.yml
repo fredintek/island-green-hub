@@ -30,6 +30,8 @@ services:
       - "4001:4001"
     env_file:
       - ./frontend/.env
+    environment:
+      - NEXT_PUBLIC_BACKEND_URL=http://backend:1111
     depends_on:
       - backend
     networks:

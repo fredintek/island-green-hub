@@ -9,7 +9,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: ['http://localhost:3001', 'http://localhost:3000'],
+    origin: ['http://localhost:4001', 'http://localhost:3001'],
     credentials: true,
   });
   app.use(cookieParser());

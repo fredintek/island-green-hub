@@ -162,9 +162,7 @@ export class AuthService {
     });
   }
 
-  public async verifyRefreshToken(data: {
-    refreshToken: string;
-  }): Promise<boolean> {
+  public async verifyRefreshToken(data: { refreshToken: string }) {
     try {
       const decoded = this.jwtService.verify(data.refreshToken, {
         secret: this.configService.get('jwt.secret'),
@@ -174,9 +172,13 @@ export class AuthService {
         throw new UnauthorizedException('invalid refresh token');
       }
 
-      return true;
+      return {
+        isValid: true,
+      };
     } catch (error) {
-      return false;
+      return {
+        isValid: false,
+      };
     }
   }
 }

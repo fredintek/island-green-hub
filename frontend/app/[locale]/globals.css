@@ -98,6 +98,10 @@ body {
   @apply !px-[25px] !mx-0 !w-full !text-black dark:!text-white;
 }
 
+.ant-menu-item-active {
+  color: white !important;
+}
+
 .ant-menu-submenu.ant-menu-submenu-popup {
   left: 70px !important;
 }
