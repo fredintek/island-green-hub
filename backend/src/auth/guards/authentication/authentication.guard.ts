@@ -60,10 +60,10 @@ export class AuthenticationGuard implements CanActivate {
 
       try {
         if (await guard.canActivate(context)) {
-          return this.roleGuard.canActivate(context);
+          return await this.roleGuard.canActivate(context);
         }
       } catch (error) {
-        throw new UnauthorizedException();
+        throw error;
       }
     }
 

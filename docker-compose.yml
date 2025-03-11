@@ -30,8 +30,6 @@ services:
       - "4001:4001"
     env_file:
       - ./frontend/.env
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://backend:1111
     depends_on:
       - backend
     networks:
@@ -43,8 +41,9 @@ services:
     ports: 
       - "3307:3306"
     container_name: island_green-mysql
+    env_file:
+      - ./backend/.env.development
     environment:
-      - MYSQL_ROOT_PASSWORD=alfred
       - MYSQL_DATABASE=island_green_db_v1
     volumes:
       - db_data:/var/lib/mysql

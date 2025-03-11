@@ -53,7 +53,7 @@ export class AuthController {
   }
 
   @Patch('user-update')
-  @Roles(RoleType.Admin)
+  @Roles(RoleType.Admin, RoleType.Editor)
   public updateUser(@Body() updateUserDto: UpdateUserDto) {
     return this.userService.updateUser(updateUserDto);
   }

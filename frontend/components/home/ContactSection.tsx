@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Upload, UploadProps } from "antd";
+import { Popconfirm, Upload, UploadProps } from "antd";
 import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import {
   useCreateSectionMutation,
@@ -190,10 +190,12 @@ const ContactSection = (props: Props) => {
             {getSectionData?.data?.content?.map(
               (obj: { publicId: string; url: string }) => (
                 <>
-                  <DeleteOutlined
-                    onClick={() => handleDeleteVideo(obj.publicId)}
-                    className="text-base self-end cursor-pointer text-red-500"
-                  />
+                  <Popconfirm
+                    title="Are you sure you want to"
+                    onConfirm={() => handleDeleteVideo(obj.publicId)}
+                  >
+                    <DeleteOutlined className="text-base self-end cursor-pointer text-red-500" />
+                  </Popconfirm>
                   <div className="bg-gray-300 w-full h-full rounded-md">
                     <video
                       className="w-full block h-full object-cover rounded-md"

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Upload, UploadProps, message } from "antd";
+import { Popconfirm, Upload, UploadProps, message } from "antd";
 import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { toast } from "react-toastify";
@@ -197,10 +197,12 @@ const UploadSection = (props: Props) => {
                       className="w-full h-full object-cover"
                     />
                     {getSectionData?.data?.content?.length > 1 && (
-                      <DeleteOutlined
-                        onClick={() => handleDeleteImage(obj.publicId)}
-                        className="text-red-500 text-lg absolute top-2 right-2 cursor-pointer"
-                      />
+                      <Popconfirm
+                        title="Are you sure you want to"
+                        onConfirm={() => handleDeleteImage(obj.publicId)}
+                      >
+                        <DeleteOutlined className="text-red-500 text-lg absolute top-2 right-2 cursor-pointer" />
+                      </Popconfirm>
                     )}
                   </div>
                 )

@@ -120,7 +120,7 @@ export class PageService {
       //product link
       const productLink = await queryRunner.manager.create(Section, {
         page: projectPage,
-        type: 'project-product-link',
+        type: `${createBulkProjectDto.productLink}-productLink`,
         sortId: 0,
         content: createBulkProjectDto.productLink,
       });
@@ -130,7 +130,7 @@ export class PageService {
       // project content
       const projectContent = await queryRunner.manager.create(Section, {
         page: projectPage,
-        type: 'project-content',
+        type: `${createBulkProjectDto.productLink}-productContent`,
         sortId: 1,
         content: {
           image: createBulkProjectDto.projectImage,
@@ -144,7 +144,7 @@ export class PageService {
       const stage2Images = createBulkProjectDto.stage2Images
         ? await queryRunner.manager.create(Section, {
             page: projectPage,
-            type: 'project-stage2-images',
+            type: `${createBulkProjectDto.productLink}-productStage2Images`,
             sortId: 2,
             content: createBulkProjectDto.stage2Images,
           })
@@ -155,7 +155,7 @@ export class PageService {
       const projectLocation = createBulkProjectDto.projectLocation
         ? await queryRunner.manager.create(Section, {
             page: projectPage,
-            type: 'project-location',
+            type: `${createBulkProjectDto.productLink}-productLocation`,
             sortId: 3,
             content: createBulkProjectDto.projectLocation,
           })
@@ -166,7 +166,7 @@ export class PageService {
       const youtubeVideos = createBulkProjectDto.youtubeVideos
         ? await queryRunner.manager.create(Section, {
             page: projectPage,
-            type: 'project-youtube-videos',
+            type: `${createBulkProjectDto.productLink}-productYoutube`,
             sortId: 4,
             content: createBulkProjectDto.youtubeVideos,
           })
@@ -241,7 +241,7 @@ export class PageService {
       // create section for the new page with product link
       const productLinkSection = await queryRunner.manager.create(Section, {
         page: newPage,
-        type: '360-product-link',
+        type: `${create360PageDto.title.en}-360`,
         sortId: 0,
         content: create360PageDto.productLink,
       });

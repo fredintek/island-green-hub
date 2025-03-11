@@ -18,7 +18,7 @@ const YoutubeVideos = ({ pageData, refetchEditedData }: Props) => {
   const [videoLinks, setVideoLinks] = useState<string[]>([""]);
 
   const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
-    "project-youtube-videos",
+    "productYoutube",
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,
@@ -56,7 +56,6 @@ const YoutubeVideos = ({ pageData, refetchEditedData }: Props) => {
   };
 
   const handleSubmit = async (values: any) => {
-    console.log("Submitted values:", values);
     // Handle API submission here
     try {
       await updateSectionFn({

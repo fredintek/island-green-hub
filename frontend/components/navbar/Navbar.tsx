@@ -17,6 +17,7 @@ type Props = {};
 
 const Navbar = (props: Props) => {
   const dispatch = useAppDispatch();
+  const currentReduxUser = useAppSelector((state) => state.auth.user);
   const [isNavbarOpen, setIsNavbarOpen] = useState<boolean>(false);
   const { isNavCollapsed, isDark } = useAppSelector((state) => state.sidebar);
   const [searchValue, setSearchValue] = useState("");
@@ -140,10 +141,15 @@ const Navbar = (props: Props) => {
             </div>
           </div>
           {/* profile picture */}
-          <Avatar
-            icon={<UserOutlined className="text-black h-5" />}
-            className="hidden md:flex cursor-pointer group w-[50px] h-[50px] bg-[#F8F8F8] border border-red-500"
-          />
+          <div className="flex flex-col gap-1 items-center">
+            <Avatar
+              icon={<UserOutlined className="text-black h-4" />}
+              className="hidden md:flex cursor-pointer group w-[40px] h-[40px] bg-[#F8F8F8] border border-red-500"
+            />
+            <p className="text-sm italic text-gray-400">
+              {currentReduxUser?.email}
+            </p>
+          </div>
 
           {/* hamburger icon */}
           <div

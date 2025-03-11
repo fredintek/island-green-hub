@@ -40,6 +40,7 @@ const page = (props: Props) => {
   const locale = useLocale();
   const [form] = Form.useForm();
   const [openModal, setOpenModal] = useState(false);
+  const [uploadinToCloud, setUploadinToCloud] = useState(false);
   const [blogFileList, setBlogFileList] = useState<any>([]);
   const [editingPage, setEditingPage] = useState<Partial<Page> | null>(null);
   const {
@@ -137,9 +138,8 @@ const page = (props: Props) => {
 
   const handleEdit = async (record: Partial<Page>) => {
     const sections = await getSectionByPageIdFn(record?.id).unwrap();
-    // console.log("sections", sections);
-    const targetSection = sections?.data.find(
-      (obj: any) => obj.type === "blog-content"
+    const targetSection = sections?.data.find((obj: any) =>
+      obj.type.includes("blogContent")
     );
     setEditingPage(record);
     setOpenModal(true);
@@ -179,9 +179,8 @@ const page = (props: Props) => {
     if (editingPage) {
       try {
         const sections = await getSectionByPageIdFn(editingPage?.id).unwrap();
-        // console.log("sections", sections);
-        const targetSection = sections?.data.find(
-          (obj: any) => obj.type === "blog-content"
+        const targetSection = sections?.data.find((obj: any) =>
+          obj.type.includes("blogContent")
         );
 
         const oldBlogImages = targetSection?.content?.blogImages;
@@ -207,7 +206,7 @@ const page = (props: Props) => {
           const updatedSection = await updateSectionFn({
             id: targetSection?.id,
             page: updatedPage?.id,
-            type: "blog-content",
+            type: `${values.blogTitleEn}-blogContent`,
             sortId: 0,
             content: {
               blogTitle: {
@@ -258,6 +257,7 @@ const page = (props: Props) => {
         setOpenModal(false);
         setEditingPage(null);
         setBlogFileList([]);
+        form.resetFields();
       } catch (error) {
         console.error("error", error);
       }
@@ -277,7 +277,7 @@ const page = (props: Props) => {
         if (createdPage?.data) {
           await createSectionFn({
             page: createdPage.data.id,
-            type: "blog-content",
+            type: `${values.blogTitleEn}-blogContent`,
             sortId: 0,
             content: {
               blogTitle: {
@@ -291,7 +291,8 @@ const page = (props: Props) => {
                 ru: stripHtml(values.blogTitleRu),
               },
               blogImages: await uploadToCloudinary(
-                values?.blogImages?.map((obj: any) => obj.originFileObj)
+                values?.blogImages?.map((obj: any) => obj.originFileObj),
+                setUploadinToCloud
               ),
             },
           }).unwrap();
@@ -299,16 +300,17 @@ const page = (props: Props) => {
         setOpenModal(false);
         setEditingPage(null);
         setBlogFileList([]);
+        form.resetFields();
       } catch (error) {
         console.error(error);
       }
     }
   };
 
-  const handleDeletePage = async (record: Partial<Page>) => {
+  const handleDeletePage = async (record: any) => {
     const sections = await getSectionByPageIdFn(record?.id).unwrap();
     const targetSection = sections?.data.find(
-      (obj: any) => obj.type === "blog-content"
+      (obj: any) => obj.type === `${record?.title.en}-blogContent`
     );
     try {
       await deletePageFn(record?.id).unwrap();
@@ -387,6 +389,9 @@ const page = (props: Props) => {
   useEffect(() => {
     if (updateSectionIsSuccess) {
       toast.success("Page updated successfully");
+      setOpenModal(false);
+      setBlogFileList([]);
+      setEditingPage(null);
       getAllPageBySlugRefetch();
     }
 
@@ -454,10 +459,14 @@ const page = (props: Props) => {
         onCancel={() => {
           setOpenModal(false);
           setEditingPage(null);
+          setBlogFileList([]);
+          form.resetFields();
         }}
         onClose={() => {
           setOpenModal(false);
           setEditingPage(null);
+          setBlogFileList([]);
+          form.resetFields();
         }}
         open={openModal}
         width={{
@@ -589,7 +598,8 @@ const page = (props: Props) => {
             updatePageIsLoading ||
             updateSectionIsLoading ||
             deleteFileFromCloudinaryIsLoading ||
-            removeLinkIsLoading
+            removeLinkIsLoading ||
+            uploadinToCloud
           }
         >
           {createPageIsLoading ||
@@ -597,7 +607,8 @@ const page = (props: Props) => {
           updatePageIsLoading ||
           updateSectionIsLoading ||
           deleteFileFromCloudinaryIsLoading ||
-          removeLinkIsLoading ? (
+          removeLinkIsLoading ||
+          uploadinToCloud ? (
             <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
           ) : (
             <p className="uppercase font-medium">

@@ -43,7 +43,6 @@ export class UserController {
 
   // delete user
   @Delete(':userId')
-  @Auth(AuthType.Bearer)
   @Roles(RoleType.Admin)
   deleteUser(@Param('userId') userId: number) {
     return this.userService.deleteUser(userId);

@@ -6,6 +6,8 @@ import {
   useUpdateUserMutation,
   useUpdateUserRoleMutation,
 } from "@/redux/api/userApiSlice";
+import { useAppSelector } from "@/redux/store";
+import { equalValues } from "@/utils";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -20,6 +22,7 @@ type Props = {};
 
 const page = (props: Props) => {
   const [form] = Form.useForm();
+  const currentReduxUser = useAppSelector((state) => state.auth.user);
   const [targetRow, setTargetRow] = useState<number | null>(null);
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -171,34 +174,36 @@ const page = (props: Props) => {
         return (
           <div className="flex items-center gap-4">
             {/* role switcher */}
-            {targetRow === record?.id && updateUserRoleIsLoading ? (
-              <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div>
-            ) : (
-              <Dropdown
-                menu={{
-                  items: roles.map((role) => ({
-                    ...role,
-                    label: (
-                      <div
-                        onClick={() =>
-                          handleUpdateUserRoles(record?.id, role.key)
-                        }
-                        className={`px-2 py-1 ${
-                          role.key === record.role?.toLocaleLowerCase()
-                            ? "text-red-500"
-                            : ""
-                        }`}
-                      >
-                        {role.label}
-                      </div>
-                    ),
-                  })),
-                }}
-                trigger={["click"]}
-              >
-                <UserSwitchOutlined className="text-gray-500 cursor-pointer" />
-              </Dropdown>
-            )}
+            {!equalValues(record?.id, currentReduxUser?.id) ? (
+              targetRow === record?.id && updateUserRoleIsLoading ? (
+                <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div>
+              ) : (
+                <Dropdown
+                  menu={{
+                    items: roles.map((role) => ({
+                      ...role,
+                      label: (
+                        <div
+                          onClick={() =>
+                            handleUpdateUserRoles(record?.id, role.key)
+                          }
+                          className={`px-2 py-1 ${
+                            role.key === record.role?.toLocaleLowerCase()
+                              ? "text-red-500"
+                              : ""
+                          }`}
+                        >
+                          {role.label}
+                        </div>
+                      ),
+                    })),
+                  }}
+                  trigger={["click"]}
+                >
+                  <UserSwitchOutlined className="text-gray-500 cursor-pointer" />
+                </Dropdown>
+              )
+            ) : null}
 
             {/* edit */}
             <EditOutlined
@@ -210,16 +215,18 @@ const page = (props: Props) => {
             />
 
             {/* delete */}
-            {deleteUserIsLoading ? (
-              <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div>
-            ) : (
-              <Popconfirm
-                title="Are you sure?"
-                onConfirm={() => handleDeleteUser(record?.id)}
-              >
-                <DeleteOutlined className="cursor-pointer text-gray-500" />
-              </Popconfirm>
-            )}
+            {!equalValues(record?.id, currentReduxUser?.id) ? (
+              deleteUserIsLoading ? (
+                <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div>
+              ) : (
+                <Popconfirm
+                  title="Are you sure?"
+                  onConfirm={() => handleDeleteUser(record?.id)}
+                >
+                  <DeleteOutlined className="cursor-pointer text-gray-500" />
+                </Popconfirm>
+              )
+            ) : null}
           </div>
         );
       },

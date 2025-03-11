@@ -23,6 +23,20 @@ export class MultilingualTextDto {
   tr: string;
 }
 
+export class OptionalMultilingualTextDto {
+  @IsOptional()
+  @IsString()
+  en?: string;
+
+  @IsOptional()
+  @IsString()
+  ru?: string;
+
+  @IsOptional()
+  @IsString()
+  tr?: string;
+}
+
 export class ImageUrlDto {
   @IsNotEmpty()
   @IsString()
@@ -78,8 +92,8 @@ export class CreateProjectHouseDto {
 
   @IsOptional()
   @ValidateNested()
-  @Type(() => MultilingualTextDto)
-  optionalFeatures?: MultilingualTextDto;
+  @Type(() => OptionalMultilingualTextDto)
+  optionalFeatures?: OptionalMultilingualTextDto;
 
   @IsOptional()
   @IsArray()

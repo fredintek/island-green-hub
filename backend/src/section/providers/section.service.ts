@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Section } from '../section.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSectionDto } from '../dtos/create-section.dto';
@@ -227,7 +227,7 @@ export class SectionService {
   public async getSingleSectionByType(sectionType: string) {
     // find section with the provided id
     const section = await this.sectionRepository.findOne({
-      where: { type: sectionType },
+      where: { type: Like(`%${sectionType}%`) },
       relations: ['page'],
     });
 

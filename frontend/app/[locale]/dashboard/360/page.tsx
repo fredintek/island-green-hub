@@ -108,11 +108,13 @@ const page = (props: Props) => {
         };
         await createBulk360PageFn(targetData).unwrap();
       }
-      setRecord(null);
-      setIsOpenModal(false);
     } catch (error) {
       console.error("Failed to create bulk360", error);
     }
+
+    setRecord(null);
+    setIsOpenModal(false);
+    form.resetFields();
   };
 
   const column360: ColumnsType<Partial<Page>> = [
@@ -150,8 +152,8 @@ const page = (props: Props) => {
         pageTitleTr: record.title.tr,
         pageTitleEn: record.title.en,
         pageTitleRu: record.title.ru,
-        productLink: record.sections.find(
-          (obj: any) => obj.type === "360-product-link"
+        productLink: record.sections.find((obj: any) =>
+          obj.type.includes(record?.title?.en)
         ).content,
       });
     }
@@ -246,10 +248,12 @@ const page = (props: Props) => {
         onCancel={() => {
           setIsOpenModal(false);
           setRecord(null);
+          form.resetFields();
         }}
         onClose={() => {
           setIsOpenModal(false);
           setRecord(null);
+          form.resetFields();
         }}
         open={isOpenModal}
         width={{

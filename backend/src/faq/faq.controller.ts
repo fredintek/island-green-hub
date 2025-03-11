@@ -38,7 +38,7 @@ export class FaqController {
    * Get Single FAQ
    */
   @Get(':faqId')
-  @Roles(RoleType.Admin, RoleType.Editor)
+  @Auth(AuthType.None)
   getSingleFaq(@Param('faqId', ParseIntPipe) faqId: number) {
     return this.faqService.getSingleFaq(faqId);
   }

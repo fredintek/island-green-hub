@@ -51,11 +51,13 @@ export class PageController {
   }
 
   @Patch('bulk-about')
+  @Roles(RoleType.Admin, RoleType.Editor)
   updateBulkAboutPage(@Body() updateBulkAboutPageDto: UpdateBulkAboutPageDto) {
     return this.pageService.updateBulkAboutPage(updateBulkAboutPageDto);
   }
 
   @Patch('bulk-360')
+  @Roles(RoleType.Admin, RoleType.Editor)
   update360Page(@Body() update360PageDto: Update360PageDto) {
     return this.pageService.update360Page(update360PageDto);
   }

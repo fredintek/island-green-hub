@@ -21,7 +21,7 @@ const ProductLink = ({ pageData, refetchEditedData }: Props) => {
     isError: getSectionByTypeIsError,
     isSuccess: getSectionByTypeIsSuccess,
     error: getSectionByTypeError,
-  } = useGetSectionByTypeQuery("project-product-link", {
+  } = useGetSectionByTypeQuery("productLink", {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
@@ -40,8 +40,8 @@ const ProductLink = ({ pageData, refetchEditedData }: Props) => {
 
   const handleSubmit = async (values: any) => {
     const targetData = {
-      id: pageData?.sections?.find(
-        (section) => section.type === "project-product-link"
+      id: pageData?.sections?.find((section) =>
+        section.type?.includes("productLink")
       )?.id,
       content: values.productLink,
     };
@@ -55,8 +55,8 @@ const ProductLink = ({ pageData, refetchEditedData }: Props) => {
 
   useEffect(() => {
     form.setFieldsValue({
-      productLink: pageData?.sections?.find(
-        (section) => section.type === "project-product-link"
+      productLink: pageData?.sections?.find((section) =>
+        section.type?.includes("productLink")
       )?.content,
     });
   }, [[pageData]]);
@@ -64,7 +64,6 @@ const ProductLink = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updateSectionIsSuccess) {
       toast.success("Product Link updated successfully");
-      refetchEditedData(getSectionByTypeData?.data?.page?.slug);
     }
 
     if (updateSectionIsError) {

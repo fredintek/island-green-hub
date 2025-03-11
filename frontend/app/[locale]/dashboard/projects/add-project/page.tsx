@@ -4,6 +4,7 @@ import {
   useCreateBulkProjectPageMutation,
   useGetPageBySlugQuery,
 } from "@/redux/api/pageApiSlice";
+import { useAppSelector } from "@/redux/store";
 import { DeleteOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Upload } from "antd";
 import Dragger from "antd/es/upload/Dragger";
@@ -33,6 +34,7 @@ const page = (props: Props) => {
   );
   const [projectFileList, setProjectFileList] = useState<any>([]);
   const [projectPdfList, setProjectPdfList] = useState<any>([]);
+  const currentReduxUser = useAppSelector((state) => state.auth.user);
   const [projectHomeImageList, setProjectHomeImageList] = useState<any>([]);
   const [projectHouseGallery, setProjectHouseGallery] = useState<any>([]);
   const [projectHouseCoverImageFileList, setProjectHouseCoverImageFileList] =
@@ -43,6 +45,13 @@ const page = (props: Props) => {
   ] = useState<any>([]);
   const [stage2Images, setStage2Images] = useState<any>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([""]);
+  const [cloudLoading1, setCloudLoading1] = useState<boolean>(false);
+  const [cloudLoading2, setCloudLoading2] = useState<boolean>(false);
+  const [cloudLoading3, setCloudLoading3] = useState<boolean>(false);
+  const [cloudLoading4, setCloudLoading4] = useState<boolean>(false);
+  const [cloudLoading5, setCloudLoading5] = useState<boolean>(false);
+  const [cloudLoading6, setCloudLoading6] = useState<boolean>(false);
+  const [cloudLoading7, setCloudLoading7] = useState<boolean>(false);
   const [form] = Form.useForm();
 
   const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
@@ -109,7 +118,10 @@ const page = (props: Props) => {
   };
 
   const handleSubmit = async (values: any) => {
-    // console.log("Received values of form: ", values);
+    if (currentReduxUser?.role !== "admin") {
+      toast.error("You cannot perform this action");
+      return;
+    }
     /**
      * properties to upload
      * projectImage*, projectPdf*, [projectHomeImage]*, projectHouseCoverImage*
@@ -124,34 +136,41 @@ const page = (props: Props) => {
         ? ((await uploadToCloudinary(
             values?.projectHouseGallery?.map(
               (fileObj: any) => fileObj.originFileObj
-            )
+            ),
+            setCloudLoading1
           )) as { publicId: string; url: string }[])
         : [];
 
       stage2Images = values?.stage2Images
         ? await uploadToCloudinary(
-            values?.stage2Images?.map((fileObj: any) => fileObj.originFileObj)
+            values?.stage2Images?.map((fileObj: any) => fileObj.originFileObj),
+            setCloudLoading2
           )
         : [];
 
       const projectHomeImages = await uploadToCloudinary(
-        values?.projectHomeImage?.map((fileObj: any) => fileObj.originFileObj)
+        values?.projectHomeImage?.map((fileObj: any) => fileObj.originFileObj),
+        setCloudLoading3
       );
 
       const projectHouseCoverImage = await uploadToCloudinary(
-        values?.projectHouseCoverImage[0]?.originFileObj
+        values?.projectHouseCoverImage[0]?.originFileObj,
+        setCloudLoading4
       );
 
       const projectImage = await uploadToCloudinary(
-        values?.projectImages[0]?.originFileObj
+        values?.projectImages[0]?.originFileObj,
+        setCloudLoading5
       );
 
       const projectPdf = await uploadToCloudinary(
-        values?.projectPdf[0]?.originFileObj
+        values?.projectPdf[0]?.originFileObj,
+        setCloudLoading6
       );
 
       const projectHouseDisplayImage = await uploadToCloudinary(
-        values?.projectHouseDisplayImage[0]?.originFileObj
+        values?.projectHouseDisplayImage[0]?.originFileObj,
+        setCloudLoading7
       );
 
       const data = {
@@ -844,9 +863,26 @@ const page = (props: Props) => {
           <button
             onClick={() => form.submit()}
             type="button"
+            disabled={
+              createBulkProjectIsLoading ||
+              cloudLoading1 ||
+              cloudLoading2 ||
+              cloudLoading3 ||
+              cloudLoading4 ||
+              cloudLoading5 ||
+              cloudLoading6 ||
+              cloudLoading7
+            }
             className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
           >
-            {createBulkProjectIsLoading ? (
+            {createBulkProjectIsLoading ||
+            cloudLoading1 ||
+            cloudLoading2 ||
+            cloudLoading3 ||
+            cloudLoading4 ||
+            cloudLoading5 ||
+            cloudLoading6 ||
+            cloudLoading7 ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (
               <p className="uppercase font-medium">Submit</p>

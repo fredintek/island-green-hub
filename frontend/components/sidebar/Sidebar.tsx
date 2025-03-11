@@ -12,7 +12,7 @@ import {
   RotateLeftOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { ConfigProvider, Menu, Tooltip } from "antd";
+import { ConfigProvider, Menu, Popconfirm, Tooltip } from "antd";
 import React, { JSX, useEffect, useState } from "react";
 import { useGetAllPagesQuery } from "@/redux/api/pageApiSlice";
 import { Page } from "@/utils/interfaces";
@@ -196,11 +196,10 @@ const Sidebar = (props: Props) => {
         </ConfigProvider>
       </div>
 
-      <Tooltip title="logout">
+      <Popconfirm title="Are you sure?" onConfirm={() => logoutFn(undefined)}>
         <button
           type="button"
           className="mx-auto mb-2 px-6 py-2 w-[95%] rounded-md text-white cursor-pointer flex items-center justify-center gap-2 bg-red-500 transition duration-300"
-          onClick={() => logoutFn(undefined)}
         >
           <LogoutOutlined />
           <p
@@ -213,7 +212,7 @@ const Sidebar = (props: Props) => {
             Logout
           </p>
         </button>
-      </Tooltip>
+      </Popconfirm>
     </div>
   );
 };

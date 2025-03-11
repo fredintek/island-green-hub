@@ -268,8 +268,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         : [];
       const gallery = record.gallery
         ? record?.gallery?.map((img: any) => ({
-            url: img.url,
-            uid: img.publicId,
+            url: img.imageUrl.url,
+            uid: img.imageUrl.publicId,
             name: "image",
             status: "done",
           }))
@@ -310,6 +310,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updateProjectHouseIsSuccess) {
       toast.success("Project house updated successfully");
+      setIsOpenModal(false);
+      setRecord(null);
       refetchEditedData(getPageBySlugData?.slug);
     }
 

@@ -38,7 +38,7 @@ export class SectionController {
    */
   @Patch()
   @Roles(RoleType.Admin, RoleType.Editor)
-  updatePage(@Body() updateSectionDto: UpdateSectionDto) {
+  updateSection(@Body() updateSectionDto: UpdateSectionDto) {
     return this.sectionService.updateSection(updateSectionDto);
   }
 

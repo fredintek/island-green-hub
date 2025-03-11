@@ -23,7 +23,7 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
     useState<boolean>(false);
 
   const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
-    "project-stage2-images",
+    "productStage2Images",
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,

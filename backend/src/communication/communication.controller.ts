@@ -42,7 +42,7 @@ export class CommunicationController {
   }
 
   @Get(':communicationId')
-  @Roles(RoleType.Admin, RoleType.Editor)
+  @Auth(AuthType.None)
   getCommunicationById(
     @Param('communicationId', ParseIntPipe) communicationId: number,
   ) {

@@ -34,7 +34,6 @@ const baseQueryWithReauth: BaseQueryFn<
 
   // If forbidden (401), attempt to refresh the token
   if (result.error && result.error.status === 401) {
-    // console.log("RESULT", result);
     // console.warn("Access token expired, attempting refresh...");
 
     // Attempt to refresh the token
@@ -43,8 +42,6 @@ const baseQueryWithReauth: BaseQueryFn<
       api,
       extraOptions
     );
-
-    // console.log("refreshResult", refreshResult);
 
     if (refreshResult.error) {
       const refreshResultError = refreshResult.error as {

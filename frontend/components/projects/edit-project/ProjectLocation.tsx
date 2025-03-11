@@ -16,7 +16,7 @@ const ProjectLocation = ({ pageData, refetchEditedData }: Props) => {
   const [form] = Form.useForm();
 
   const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
-    "project-location",
+    "productLocation",
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,

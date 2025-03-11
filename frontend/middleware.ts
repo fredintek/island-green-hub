@@ -62,7 +62,6 @@ async function verifyRefreshToken(token: string): Promise<boolean> {
     if (!response.ok) return false;
 
     const data = await response.json();
-    console.log("Token verification response:", data);
     return data?.isValid === true;
   } catch (error) {
     console.error("Error verifying refresh token:", error);

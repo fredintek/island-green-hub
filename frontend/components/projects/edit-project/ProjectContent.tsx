@@ -31,7 +31,7 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
   const [isPdfUploadToCloud, setIsPdfUploadToCloud] = useState<boolean>(false);
 
   const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
-    "project-content",
+    "productContent",
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,
