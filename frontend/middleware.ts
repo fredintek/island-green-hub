@@ -7,8 +7,8 @@ const intlMiddleware = createMiddleware(routing);
 
 // Backend API URL for verifying refresh tokens
 // console.log("NEXT PUBLIC URL", process.env.NEXT_PUBLIC_BASE_URL);
-// const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-refresh-token`;
-const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-refresh-token`;
+const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-refresh-token`;
+// const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/verify-refresh-token`;
 
 export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;

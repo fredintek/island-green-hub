@@ -3,12 +3,15 @@ import { Popconfirm, Upload, UploadProps } from "antd";
 import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import {
   useCreateSectionMutation,
+  useDeleteFileMutation,
   useGetSectionByTypeQuery,
   useRemoveLinkFromSectionContentMutation,
+  useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { toast } from "react-toastify";
+import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 
 const { Dragger } = Upload;
 
@@ -16,7 +19,6 @@ type Props = {};
 
 const ContactSection = (props: Props) => {
   const [videoFileList, setVideoFileList] = useState<any>([]);
-  const [uploadVideoLoading, setUploadVideoLoading] = useState<boolean>(false);
 
   const draggerProps: UploadProps = {
     name: "file",
@@ -30,28 +32,26 @@ const ContactSection = (props: Props) => {
     onChange(info) {
       const { status } = info.file;
       if (status !== "uploading") {
-        // console.log("INFO FILE:uploading", info.file, info.fileList);
         setVideoFileList(info.fileList);
       }
     },
-    // onDrop(e) {
-    //   console.log("Dropped files", e.dataTransfer.files);
-    // },
     listType: "picture-card",
     accept: "video/mp4",
+    maxCount: 1,
   };
 
-  const {
-    data: getSectionData,
-    isLoading: getSectionIsLoading,
-    isError: getSectionIsError,
-    error: getSectionError,
-    refetch: getSectionRefetch,
-  } = useGetSectionByTypeQuery("contact", {
+  const { data: getPageBySlugData } = useGetPageBySlugQuery("home", {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
   });
+
+  const { data: getSectionData, refetch: getSectionRefetch } =
+    useGetSectionByTypeQuery("home-contact", {
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+      refetchOnFocus: true,
+    });
 
   const [
     createSectionFn,
@@ -65,17 +65,6 @@ const ContactSection = (props: Props) => {
   ] = useCreateSectionMutation();
 
   const [
-    deleteFileFromCloudinaryFn,
-    {
-      isError: deleteFileFromCloudinaryIsError,
-      isLoading: deleteFileFromCloudinaryIsLoading,
-      isSuccess: deleteFileFromCloudinaryIsSuccess,
-      error: deleteFileFromCloudinaryError,
-      data: deleteFileFromCloudinaryData,
-    },
-  ] = useDeleteFileFromCloudinaryMutation();
-
-  const [
     removeLinkFn,
     {
       isError: removeLinkIsError,
@@ -86,43 +75,61 @@ const ContactSection = (props: Props) => {
     },
   ] = useRemoveLinkFromSectionContentMutation();
 
+  const [
+    uploadFileFn,
+    {
+      isError: uploadFileIsError,
+      isLoading: uploadFileIsLoading,
+      isSuccess: uploadFileIsSuccess,
+      error: uploadFileError,
+      data: uploadFileData,
+    },
+  ] = useUploadFileMutation();
+
+  const [
+    deleteFileFn,
+    {
+      isError: deleteFileIsError,
+      isLoading: deleteFileIsLoading,
+      isSuccess: deleteFileIsSuccess,
+      error: deleteFileError,
+      data: deleteFileData,
+    },
+  ] = useDeleteFileMutation();
+
+  const handleDeleteVideo = async (filename: string) => {
+    const target = filename.split("uploads/").pop();
+    try {
+      await deleteFileFn({ filename: target }).unwrap();
+      await removeLinkFn({
+        sectionId: getSectionData.data.id,
+        link: filename,
+      }).unwrap();
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
   const handleSubmit = async () => {
-    const videosToUpload = videoFileList?.map(
-      (fileObj: any) => fileObj.originFileObj
+    const formData = new FormData();
+    videoFileList?.map((fileObj: any) =>
+      formData.append("files", fileObj.originFileObj)
     );
 
     try {
-      const uploadedVideos = await uploadToCloudinary(
-        videosToUpload,
-        setUploadVideoLoading
-      );
-      setVideoFileList([]);
-
+      const uploadedVideos = await uploadFileFn(formData).unwrap();
       const data = {
-        page: getSectionData?.data?.page?.id,
-        type: getSectionData?.data?.type,
-        sortId: getSectionData?.data?.sortId,
+        page: getPageBySlugData?.id,
+        type: "home-contact",
+        sortId: 3,
         content: uploadedVideos,
       };
       await createSectionFn(data).unwrap();
     } catch (error) {
-      console.error("Error during file upload:", error);
+      console.error("Error file upload:", error);
     }
-  };
 
-  const handleDeleteVideo = async (publicId: string) => {
-    try {
-      await deleteFileFromCloudinaryFn({
-        publicId,
-        resourceType: "video",
-      }).unwrap();
-      await removeLinkFn({
-        sectionId: getSectionData.data.id,
-        link: publicId,
-      }).unwrap();
-    } catch (error) {
-      console.error("Error during file upload:", error);
-    }
+    setVideoFileList([]);
   };
 
   useEffect(() => {
@@ -143,6 +150,17 @@ const ContactSection = (props: Props) => {
   ]);
 
   useEffect(() => {
+    if (uploadFileIsSuccess) {
+      toast.success(uploadFileData?.message);
+    }
+
+    if (uploadFileIsError) {
+      const customError = uploadFileError as { data: any; status: number };
+      toast.error(customError.data.message);
+    }
+  }, [uploadFileIsSuccess, uploadFileIsError, uploadFileError, uploadFileData]);
+
+  useEffect(() => {
     if (removeLinkIsSuccess) {
       toast.success(removeLinkData.message);
       getSectionRefetch();
@@ -155,24 +173,19 @@ const ContactSection = (props: Props) => {
   }, [removeLinkIsSuccess, removeLinkIsError, removeLinkError, removeLinkData]);
 
   useEffect(() => {
-    if (deleteFileFromCloudinaryIsSuccess) {
-      // toast.success(deleteFileFromCloudinaryData.message);
+    if (deleteFileIsSuccess) {
+      // toast.success(deleteFileData.message);
       getSectionRefetch();
     }
 
-    if (deleteFileFromCloudinaryIsError) {
-      const customError = deleteFileFromCloudinaryError as {
+    if (deleteFileIsError) {
+      const customError = deleteFileError as {
         data: any;
         status: number;
       };
       toast.error(customError.data.message);
     }
-  }, [
-    deleteFileFromCloudinaryIsSuccess,
-    deleteFileFromCloudinaryIsError,
-    deleteFileFromCloudinaryError,
-    deleteFileFromCloudinaryData,
-  ]);
+  }, [deleteFileIsSuccess, deleteFileIsError, deleteFileError, deleteFileData]);
 
   return (
     <div className="p-6 bg-white dark:bg-[#1e293b] shadow-md rounded-md">
@@ -187,31 +200,29 @@ const ContactSection = (props: Props) => {
             <p className="text-lg text-black dark:text-gray-300 font-medium capitalize">
               Existing Video
             </p>
-            {getSectionData?.data?.content?.map(
-              (obj: { publicId: string; url: string }) => (
-                <>
-                  <Popconfirm
-                    title="Are you sure you want to"
-                    onConfirm={() => handleDeleteVideo(obj.publicId)}
+            {getSectionData?.data?.content?.map((url: string) => (
+              <>
+                <Popconfirm
+                  title="Are you sure you want to"
+                  onConfirm={() => handleDeleteVideo(url)}
+                >
+                  <DeleteOutlined className="text-base self-end cursor-pointer text-red-500" />
+                </Popconfirm>
+                <div className="bg-gray-300 w-full h-full rounded-md">
+                  <video
+                    className="w-full block h-full object-cover rounded-md"
+                    autoPlay
+                    loop
+                    muted
+                    preload="none"
+                    playsInline
                   >
-                    <DeleteOutlined className="text-base self-end cursor-pointer text-red-500" />
-                  </Popconfirm>
-                  <div className="bg-gray-300 w-full h-full rounded-md">
-                    <video
-                      className="w-full block h-full object-cover rounded-md"
-                      autoPlay
-                      loop
-                      muted
-                      preload="none"
-                      playsInline
-                    >
-                      <source src={obj.url} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                </>
-              )
-            )}
+                    <source src={url} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              </>
+            ))}
           </div>
         )}
         <div className="mt-2">
@@ -236,15 +247,15 @@ const ContactSection = (props: Props) => {
         type="button"
         className="ml-auto mt-3 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
         disabled={
-          uploadVideoLoading ||
+          deleteFileIsLoading ||
           createSectionIsLoading ||
-          deleteFileFromCloudinaryIsLoading ||
+          uploadFileIsLoading ||
           removeLinkIsLoading
         }
       >
-        {uploadVideoLoading ||
+        {deleteFileIsLoading ||
         createSectionIsLoading ||
-        deleteFileFromCloudinaryIsLoading ||
+        uploadFileIsLoading ||
         removeLinkIsLoading ? (
           <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
         ) : (

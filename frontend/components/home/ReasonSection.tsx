@@ -1,12 +1,13 @@
 "use client";
 import { iconClasses } from "@/constants/icon-classes.constant";
+import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import {
   useCreateSectionMutation,
   useGetSectionByTypeQuery,
 } from "@/redux/api/sectionApiSlice";
 import { MultiLanguage } from "@/utils/interfaces";
-import { DeleteOutlined, EditOutlined } from "@ant-design/icons";
-import { Form, Input, Modal, Popconfirm, Select, Table, Tooltip } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { Form, Input, Modal, Select, Table, Tooltip } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { ColumnsType } from "antd/es/table";
 import React, { useEffect, useState } from "react";
@@ -26,17 +27,18 @@ const ReasonSection = (props: Props) => {
   const [editingReason, setEditingReason] = useState<Reason | null>(null);
   const [reasonIndex, setReasonIndex] = useState<number | null>(null);
 
-  const {
-    data: getSectionData,
-    isLoading: getSectionIsLoading,
-    isError: getSectionIsError,
-    error: getSectionError,
-    refetch: getSectionRefetch,
-  } = useGetSectionByTypeQuery("reason", {
+  const { data: getPageBySlugData } = useGetPageBySlugQuery("home", {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
   });
+
+  const { data: getSectionData, refetch: getSectionRefetch } =
+    useGetSectionByTypeQuery("home-reason", {
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+      refetchOnFocus: true,
+    });
 
   const [
     createSectionFn,
@@ -85,9 +87,9 @@ const ReasonSection = (props: Props) => {
       return item; // Keep other objects unchanged
     });
     const data = {
-      page: getSectionData?.data?.page?.id,
-      type: getSectionData?.data?.type,
-      sortId: getSectionData?.data?.sortId,
+      page: getPageBySlugData?.id,
+      type: "home-reason",
+      sortId: 2,
       content: updatedContent,
     };
 

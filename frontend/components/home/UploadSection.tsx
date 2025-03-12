@@ -5,10 +5,10 @@ import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import {
   useCreateSectionMutation,
-  useDeleteImageMutation,
+  useDeleteFileMutation,
   useGetSectionByTypeQuery,
   useRemoveLinkFromSectionContentMutation,
-  useUploadImagesMutation,
+  useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { getImagePath } from "@/utils";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
@@ -61,26 +61,26 @@ const UploadSection = (props: Props) => {
   ] = useCreateSectionMutation();
 
   const [
-    uploadImagesFn,
+    uploadFileFn,
     {
-      isError: uploadImagesIsError,
-      isLoading: uploadImagesIsLoading,
-      isSuccess: uploadImagesIsSuccess,
-      error: uploadImagesError,
-      data: uploadImagesData,
+      isError: uploadFileIsError,
+      isLoading: uploadFileIsLoading,
+      isSuccess: uploadFileIsSuccess,
+      error: uploadFileError,
+      data: uploadFileData,
     },
-  ] = useUploadImagesMutation();
+  ] = useUploadFileMutation();
 
   const [
-    deleteImageFn,
+    deleteFileFn,
     {
-      isError: deleteImageIsError,
-      isLoading: deleteImageIsLoading,
-      isSuccess: deleteImageIsSuccess,
-      error: deleteImageError,
-      data: deleteImageData,
+      isError: deleteFileIsError,
+      isLoading: deleteFileIsLoading,
+      isSuccess: deleteFileIsSuccess,
+      error: deleteFileError,
+      data: deleteFileData,
     },
-  ] = useDeleteImageMutation();
+  ] = useDeleteFileMutation();
 
   const [
     removeLinkFn,
@@ -93,16 +93,16 @@ const UploadSection = (props: Props) => {
     },
   ] = useRemoveLinkFromSectionContentMutation();
 
-  const handleDeleteImage = async (filename: string) => {
+  const handleDeleteFile = async (filename: string) => {
     const target = filename.split("uploads/").pop();
     try {
-      await deleteImageFn({ filename: target }).unwrap();
+      await deleteFileFn({ filename: target }).unwrap();
       await removeLinkFn({
         sectionId: getSectionData.data.id,
         link: filename,
       }).unwrap();
     } catch (error) {
-      console.error("Error during file upload:", error);
+      console.error("Error:", error);
     }
   };
 
@@ -112,21 +112,17 @@ const UploadSection = (props: Props) => {
       formData.append("files", fileObj.originFileObj);
     });
     try {
-      const uploadedImages = await uploadImagesFn(formData).unwrap();
-      const uploadedImagesPath = uploadedImages?.map((img: string) =>
-        getImagePath(img)
-      );
+      const uploadedImages = await uploadFileFn(formData).unwrap();
 
       const data = {
         page: getPageBySlugData?.id,
         type: "home-hero",
         sortId: 0,
-        content: [...getSectionData?.data?.content, ...uploadedImagesPath],
+        content: [...getSectionData?.data?.content, ...uploadedImages],
       };
       await createSectionFn(data).unwrap();
     } catch (error) {
       console.error("Error file upload:", error);
-      toast.error("Something went wrong");
     }
 
     setHeroFileList([]);
@@ -150,20 +146,15 @@ const UploadSection = (props: Props) => {
   ]);
 
   useEffect(() => {
-    if (uploadImagesIsSuccess) {
-      toast.success(uploadImagesData?.message);
+    if (uploadFileIsSuccess) {
+      toast.success(uploadFileData?.message);
     }
 
-    if (uploadImagesIsError) {
-      const customError = uploadImagesError as { data: any; status: number };
+    if (uploadFileIsError) {
+      const customError = uploadFileError as { data: any; status: number };
       toast.error(customError.data.message);
     }
-  }, [
-    uploadImagesIsSuccess,
-    uploadImagesIsError,
-    uploadImagesError,
-    uploadImagesData,
-  ]);
+  }, [uploadFileIsSuccess, uploadFileIsError, uploadFileError, uploadFileData]);
 
   useEffect(() => {
     if (removeLinkIsSuccess) {
@@ -177,24 +168,19 @@ const UploadSection = (props: Props) => {
   }, [removeLinkIsSuccess, removeLinkIsError, removeLinkError, removeLinkData]);
 
   useEffect(() => {
-    if (deleteImageIsSuccess) {
-      toast.success(deleteImageData.message);
+    if (deleteFileIsSuccess) {
+      toast.success(deleteFileData.message);
       getSectionRefetch();
     }
 
-    if (deleteImageIsError) {
-      const customError = deleteImageError as {
+    if (deleteFileIsError) {
+      const customError = deleteFileError as {
         data: any;
         status: number;
       };
       toast.error(customError?.data?.message || "error deleting file");
     }
-  }, [
-    deleteImageIsSuccess,
-    deleteImageIsError,
-    deleteImageError,
-    deleteImageData,
-  ]);
+  }, [deleteFileIsSuccess, deleteFileIsError, deleteFileError, deleteFileData]);
 
   return (
     <div className="flex flex-col p-6 bg-white dark:bg-[#1e293b] shadow-md rounded-md">
@@ -224,7 +210,7 @@ const UploadSection = (props: Props) => {
                     {getSectionData?.data?.content?.length > 1 && (
                       <Popconfirm
                         title="Are you sure you want to"
-                        onConfirm={() => handleDeleteImage(url)}
+                        onConfirm={() => handleDeleteFile(url)}
                       >
                         <DeleteOutlined className="text-red-500 text-lg absolute top-2 right-2 cursor-pointer" />
                       </Popconfirm>
@@ -263,14 +249,12 @@ const UploadSection = (props: Props) => {
           type="button"
           className="ml-auto px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
           disabled={
-            uploadImagesIsLoading ||
-            createSectionIsLoading ||
-            deleteImageIsLoading
+            uploadFileIsLoading || createSectionIsLoading || deleteFileIsLoading
           }
         >
-          {uploadImagesIsLoading ||
+          {uploadFileIsLoading ||
           createSectionIsLoading ||
-          deleteImageIsLoading ? (
+          deleteFileIsLoading ? (
             <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
           ) : (
             <p className="uppercase font-medium">Submit</p>

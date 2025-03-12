@@ -21,11 +21,8 @@ import { AuthType } from 'src/auth/enums/auth-type.enum';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { RoleType } from 'src/auth/enums/role-type.enum';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage, memoryStorage } from 'multer';
-import { extname, join } from 'path';
-import * as fs from 'fs';
-import { IsNotEmpty, IsString } from 'class-validator';
-import { deleteImageFile, uploadImageFile } from 'src/utils/uploadFileToSystem';
+import { memoryStorage } from 'multer';
+import { deleteServerFile, getFileUpload } from 'src/utils/uploadFileToSystem';
 import { mergeImagesWithTags } from 'src/utils/mergeTagsAndImages';
 
 @Controller('section')
@@ -48,20 +45,30 @@ export class SectionController {
   /**
    * Upload Images to server
    */
-  @Post('upload-images')
+  @Post('upload-file')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        if (
+          file.mimetype.startsWith('image/') ||
+          file.mimetype.startsWith('application/pdf') ||
+          file.mimetype.startsWith('video/')
+        ) {
           cb(null, true);
         } else {
-          cb(new BadRequestException('Please provide images only'), false);
+          cb(
+            new BadRequestException('Only images, videos and pdfs are allowed'),
+            false,
+          );
         }
+      },
+      limits: {
+        fileSize: 1024 * 1024 * 10, // 10MB
       },
     }),
   )
-  async uploadImages(
+  async uploadFile(
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() body: { tags: string | string[] },
   ) {
@@ -82,28 +89,28 @@ export class SectionController {
     // Validate tag length matches file length
     if (tags.length && tags.length !== files.length) {
       throw new BadRequestException(
-        'Number of tags must match number of images',
+        'Number of tags must match number of files',
       );
     }
 
-    const uploadedImages = await Promise.all(files.map(uploadImageFile));
+    const uploadedFiles = await Promise.all(files.map(getFileUpload));
     return tags.length
-      ? mergeImagesWithTags(uploadedImages, tags)
-      : uploadedImages;
+      ? mergeImagesWithTags(uploadedFiles, tags)
+      : uploadedFiles;
   }
 
   /**
    * Delete image file from the server
    */
-  @Delete('delete-image')
-  async deleteImages(@Body() body: { filename: string }) {
+  @Delete('delete-file')
+  async deleteFile(@Body() body: { filename: string }) {
     if (!body.filename) {
       throw new BadRequestException('Filename is required');
     }
 
-    const deletedImage = await deleteImageFile(body.filename);
+    const deletedFile = await deleteServerFile(body.filename);
 
-    if (!deletedImage) {
+    if (!deletedFile) {
       throw new NotFoundException('Image not found or could not be deleted');
     }
     return { message: 'Image deleted successfully' };

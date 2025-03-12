@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { join } from 'path';
 import { resizeImage } from './resizeBuffer';
 
-export const uploadImageFile = async (file: Express.Multer.File) => {
+export const getFileUpload = async (file: Express.Multer.File) => {
   let resizedImage: Buffer<ArrayBufferLike>;
   const buffer = file.buffer;
   const filename = `${Date.now()}-${file.originalname}`;
@@ -18,21 +18,28 @@ export const uploadImageFile = async (file: Express.Multer.File) => {
   // Define the filepath
   const filePath = join(uploadDir, filename);
 
-  // Now resize the image file buffer
-  try {
-    resizedImage = await resizeImage(buffer);
-  } catch (error) {
-    console.error('Error resizing image', error);
-    throw error;
+  if (
+    file.mimetype.startsWith('application/pdf') ||
+    file.mimetype.startsWith('video/')
+  ) {
+    // Write the resized image to the file system
+    fs.writeFileSync(filePath, buffer);
+  } else {
+    // Now resize the image file buffer
+    try {
+      resizedImage = await resizeImage(buffer);
+    } catch (error) {
+      console.error('Error resizing image', error);
+      throw error;
+    }
+
+    // Write the resized image to the file system
+    fs.writeFileSync(filePath, resizedImage);
   }
-
-  // Write the resized image to the file system
-  fs.writeFileSync(filePath, resizedImage);
-
-  return filename;
+  return `${process.env.API_URL}/uploads/${filename}`;
 };
 
-export const deleteImageFile = async (filename: string): Promise<boolean> => {
+export const deleteServerFile = async (filename: string): Promise<boolean> => {
   const filePath = join(process.cwd(), 'uploads', filename);
 
   try {
