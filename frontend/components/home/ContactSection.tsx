@@ -125,6 +125,9 @@ const ContactSection = (props: Props) => {
         content: uploadedVideos,
       };
       await createSectionFn(data).unwrap();
+      if (getSectionData?.data?.content[0]) {
+        await handleDeleteVideo(getSectionData?.data?.content[0]);
+      }
     } catch (error) {
       console.error("Error file upload:", error);
     }
@@ -174,7 +177,6 @@ const ContactSection = (props: Props) => {
 
   useEffect(() => {
     if (deleteFileIsSuccess) {
-      // toast.success(deleteFileData.message);
       getSectionRefetch();
     }
 
