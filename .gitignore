@@ -91,3 +91,6 @@
 # typescript
 /frontend/*.tsbuildinfo
 /frontend/next-env.d.ts
+
+
+/docker-compose.yml

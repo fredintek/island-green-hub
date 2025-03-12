@@ -1,15 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Popconfirm, Upload, UploadProps, message } from "antd";
+import { Popconfirm, Upload, UploadProps } from "antd";
 import { DeleteOutlined, InboxOutlined } from "@ant-design/icons";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { toast } from "react-toastify";
 import {
   useCreateSectionMutation,
+  useDeleteImageMutation,
   useGetSectionByTypeQuery,
   useRemoveLinkFromSectionContentMutation,
+  useUploadImagesMutation,
 } from "@/redux/api/sectionApiSlice";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
+import { getImagePath } from "@/utils";
+import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 
 const { Dragger } = Upload;
 
@@ -33,15 +35,15 @@ const UploadSection = (props: Props) => {
     accept: "image/*",
   };
   const [heroFileList, setHeroFileList] = useState<any>([]);
-  const [uploadImageLoading, setUploadImageLoading] = useState<boolean>(false);
 
-  const {
-    data: getSectionData,
-    isLoading: getSectionIsLoading,
-    isError: getSectionIsError,
-    error: getSectionError,
-    refetch: getSectionRefetch,
-  } = useGetSectionByTypeQuery("hero", {
+  const { data: getSectionData, refetch: getSectionRefetch } =
+    useGetSectionByTypeQuery("home-hero", {
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+      refetchOnFocus: true,
+    });
+
+  const { data: getPageBySlugData } = useGetPageBySlugQuery("home", {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
@@ -59,6 +61,28 @@ const UploadSection = (props: Props) => {
   ] = useCreateSectionMutation();
 
   const [
+    uploadImagesFn,
+    {
+      isError: uploadImagesIsError,
+      isLoading: uploadImagesIsLoading,
+      isSuccess: uploadImagesIsSuccess,
+      error: uploadImagesError,
+      data: uploadImagesData,
+    },
+  ] = useUploadImagesMutation();
+
+  const [
+    deleteImageFn,
+    {
+      isError: deleteImageIsError,
+      isLoading: deleteImageIsLoading,
+      isSuccess: deleteImageIsSuccess,
+      error: deleteImageError,
+      data: deleteImageData,
+    },
+  ] = useDeleteImageMutation();
+
+  const [
     removeLinkFn,
     {
       isError: removeLinkIsError,
@@ -69,63 +93,48 @@ const UploadSection = (props: Props) => {
     },
   ] = useRemoveLinkFromSectionContentMutation();
 
-  const [
-    deleteFileFromCloudinaryFn,
-    {
-      isError: deleteFileFromCloudinaryIsError,
-      isLoading: deleteFileFromCloudinaryIsLoading,
-      isSuccess: deleteFileFromCloudinaryIsSuccess,
-      error: deleteFileFromCloudinaryError,
-      data: deleteFileFromCloudinaryData,
-    },
-  ] = useDeleteFileFromCloudinaryMutation();
-
-  const handleDeleteImage = async (publicId: string) => {
+  const handleDeleteImage = async (filename: string) => {
+    const target = filename.split("uploads/").pop();
     try {
-      await deleteFileFromCloudinaryFn({ publicId }).unwrap();
+      await deleteImageFn({ filename: target }).unwrap();
       await removeLinkFn({
         sectionId: getSectionData.data.id,
-        link: publicId,
+        link: filename,
       }).unwrap();
     } catch (error) {
       console.error("Error during file upload:", error);
     }
   };
 
-  // console.log("getSectionData", getSectionData?.data);
-
   const handleSubmit = async () => {
-    const imagesToUpload = heroFileList?.map(
-      (fileObj: any) => fileObj.originFileObj
-    );
-
+    const formData = new FormData();
+    heroFileList?.map((fileObj: any) => {
+      formData.append("files", fileObj.originFileObj);
+    });
     try {
-      const uploadedImages = await uploadToCloudinary(
-        imagesToUpload,
-        setUploadImageLoading
+      const uploadedImages = await uploadImagesFn(formData).unwrap();
+      const uploadedImagesPath = uploadedImages?.map((img: string) =>
+        getImagePath(img)
       );
-      setHeroFileList([]);
 
       const data = {
-        page: getSectionData?.data?.page?.id,
-        type: getSectionData?.data?.type,
-        sortId: getSectionData?.data?.sortId,
-        content: [
-          ...getSectionData?.data?.content,
-          ...(Array.isArray(uploadedImages)
-            ? uploadedImages
-            : [uploadedImages]),
-        ],
+        page: getPageBySlugData?.id,
+        type: "home-hero",
+        sortId: 0,
+        content: [...getSectionData?.data?.content, ...uploadedImagesPath],
       };
       await createSectionFn(data).unwrap();
     } catch (error) {
-      console.error("Error during file upload:", error);
+      console.error("Error file upload:", error);
+      toast.error("Something went wrong");
     }
+
+    setHeroFileList([]);
   };
 
   useEffect(() => {
     if (createSectionIsSuccess) {
-      toast.success(createSectionData.message);
+      toast.success(createSectionData?.message);
       getSectionRefetch();
     }
 
@@ -141,8 +150,23 @@ const UploadSection = (props: Props) => {
   ]);
 
   useEffect(() => {
+    if (uploadImagesIsSuccess) {
+      toast.success(uploadImagesData?.message);
+    }
+
+    if (uploadImagesIsError) {
+      const customError = uploadImagesError as { data: any; status: number };
+      toast.error(customError.data.message);
+    }
+  }, [
+    uploadImagesIsSuccess,
+    uploadImagesIsError,
+    uploadImagesError,
+    uploadImagesData,
+  ]);
+
+  useEffect(() => {
     if (removeLinkIsSuccess) {
-      toast.success(removeLinkData.message);
       getSectionRefetch();
     }
 
@@ -153,23 +177,23 @@ const UploadSection = (props: Props) => {
   }, [removeLinkIsSuccess, removeLinkIsError, removeLinkError, removeLinkData]);
 
   useEffect(() => {
-    if (deleteFileFromCloudinaryIsSuccess) {
-      // toast.success(deleteFileFromCloudinaryData.message);
+    if (deleteImageIsSuccess) {
+      toast.success(deleteImageData.message);
       getSectionRefetch();
     }
 
-    if (deleteFileFromCloudinaryIsError) {
-      const customError = deleteFileFromCloudinaryError as {
+    if (deleteImageIsError) {
+      const customError = deleteImageError as {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(customError?.data?.message || "error deleting file");
     }
   }, [
-    deleteFileFromCloudinaryIsSuccess,
-    deleteFileFromCloudinaryIsError,
-    deleteFileFromCloudinaryError,
-    deleteFileFromCloudinaryData,
+    deleteImageIsSuccess,
+    deleteImageIsError,
+    deleteImageError,
+    deleteImageData,
   ]);
 
   return (
@@ -177,6 +201,7 @@ const UploadSection = (props: Props) => {
       <p className="text-[22px] text-secondaryShade dark:text-primaryShade font-bold uppercase mb-2">
         Hero Section
       </p>
+
       <div className="flex flex-col gap-6">
         {/* default hero images */}
         {(getSectionData?.data?.content?.length as number) > 0 && (
@@ -186,20 +211,20 @@ const UploadSection = (props: Props) => {
             </p>
             <div className="flex flex-wrap gap-10">
               {getSectionData?.data?.content?.map(
-                (obj: { publicId: string; url: string }) => (
+                (url: string, idx: number) => (
                   <div
-                    key={obj.publicId}
+                    key={idx}
                     className="relative max-w-[300px] w-full aspect-video rounded-md overflow-hidden"
                   >
                     <img
-                      src={obj.url}
+                      src={url}
                       alt="default-image"
                       className="w-full h-full object-cover"
                     />
                     {getSectionData?.data?.content?.length > 1 && (
                       <Popconfirm
                         title="Are you sure you want to"
-                        onConfirm={() => handleDeleteImage(obj.publicId)}
+                        onConfirm={() => handleDeleteImage(url)}
                       >
                         <DeleteOutlined className="text-red-500 text-lg absolute top-2 right-2 cursor-pointer" />
                       </Popconfirm>
@@ -238,16 +263,14 @@ const UploadSection = (props: Props) => {
           type="button"
           className="ml-auto px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
           disabled={
-            uploadImageLoading ||
+            uploadImagesIsLoading ||
             createSectionIsLoading ||
-            deleteFileFromCloudinaryIsLoading ||
-            removeLinkIsLoading
+            deleteImageIsLoading
           }
         >
-          {uploadImageLoading ||
+          {uploadImagesIsLoading ||
           createSectionIsLoading ||
-          deleteFileFromCloudinaryIsLoading ||
-          removeLinkIsLoading ? (
+          deleteImageIsLoading ? (
             <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
           ) : (
             <p className="uppercase font-medium">Submit</p>

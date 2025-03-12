@@ -35,6 +35,24 @@ export const sectionApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // Upload Images
+    uploadImages: builder.mutation({
+      query: (body) => ({
+        url: "/section/upload-images",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    // Upload Images
+    deleteImage: builder.mutation({
+      query: (body) => ({
+        url: "/section/delete-image",
+        method: "DELETE",
+        body,
+      }),
+    }),
+
     // Get Single Section
     getSection: builder.query({
       query: (id) => `/section/${id}`,
@@ -60,4 +78,6 @@ export const {
   useRemoveLinkFromSectionContentMutation,
   useGetSectionByPageNameQuery,
   useGetSectionByTypeQuery,
+  useUploadImagesMutation,
+  useDeleteImageMutation,
 } = sectionApiSlice;

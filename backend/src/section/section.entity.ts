@@ -13,7 +13,6 @@ export class Section {
     type: 'varchar',
     length: 255,
     nullable: false,
-    unique: true,
   })
   type: string;
 

@@ -18,3 +18,10 @@ export const equalValues = (first: any, second: any) => {
 
   return true;
 };
+
+export const getImagePath = (filename: string) => {
+  // const backendUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+  return `${backendUrl}/uploads/${filename}`;
+};
