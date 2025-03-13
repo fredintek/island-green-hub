@@ -47,7 +47,7 @@ export class SectionController {
    */
   @Post('upload-file')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
+    FilesInterceptor('files', 20, {
       storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
         if (

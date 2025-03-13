@@ -1,5 +1,4 @@
 "use client";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
   useCreateBulkAboutPageMutation,
@@ -8,6 +7,10 @@ import {
   useLazyGetPageByIdQuery,
   useUpdateBulkAboutPageMutation,
 } from "@/redux/api/pageApiSlice";
+import {
+  useDeleteFileMutation,
+  useUploadFileMutation,
+} from "@/redux/api/sectionApiSlice";
 import { Page } from "@/utils/interfaces";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table, Upload } from "antd";
@@ -30,8 +33,6 @@ const page = (props: Props) => {
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const [record, setRecord] = useState<any>(null);
   const [contentImage, setContentImage] = useState<any>([]);
-  const [isContentImageUploadToCloud, setIsContentImageUploadToCloud] =
-    useState<boolean>(false);
 
   const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
     useGetPageBySlugQuery("about", {
@@ -40,12 +41,17 @@ const page = (props: Props) => {
       refetchOnFocus: true,
     });
 
+  const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
+    useUploadFileMutation();
+
+  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
+    useDeleteFileMutation();
+
   const [getLazyPageById] = useLazyGetPageByIdQuery();
 
   const [
     deletePageFn,
     {
-      isLoading: deletePageIsLoading,
       isError: deletePageIsError,
       error: deletePageError,
       data: deletePageData,
@@ -63,11 +69,6 @@ const page = (props: Props) => {
       isSuccess: createBulkAboutPageIsSuccess,
     },
   ] = useCreateBulkAboutPageMutation();
-
-  const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
 
   const [
     updateBulkAboutPageFn,
@@ -97,7 +98,15 @@ const page = (props: Props) => {
 
   const handleDelete = async (record: Partial<Page>) => {
     try {
+      const singlePage = await getLazyPageById(record?.id).unwrap();
+      const targetSection = singlePage?.sections?.find(
+        (obj: any) => obj.type === record?.title?.en
+      );
+      const targetFilename = targetSection?.content?.image[0]
+        ?.split("/uploads")
+        ?.pop();
       await deletePageFn(record?.id).unwrap();
+      await deleteFileFn({ filename: targetFilename }).unwrap();
     } catch (error) {
       console.error("Failed to delete page", error);
     }
@@ -106,6 +115,10 @@ const page = (props: Props) => {
   const handleSubmit = async (values: any) => {
     try {
       if (record) {
+        let formData = new FormData();
+        if (values?.contentImage[0]?.originFileObj) {
+          formData.append("files", values?.contentImage[0]?.originFileObj);
+        }
         const targetData = {
           id: record?.id,
           title: {
@@ -120,14 +133,8 @@ const page = (props: Props) => {
               ru: values.pageContentRu,
             },
             image: values?.contentImage[0]?.url
-              ? {
-                  publicId: values?.contentImage[0]?.publicId,
-                  url: values?.contentImage[0]?.url,
-                }
-              : await uploadToCloudinary(
-                  values?.contentImage[0]?.originFileObj,
-                  setIsContentImageUploadToCloud
-                ),
+              ? [values?.contentImage[0]?.url]
+              : await uploadFileFn(formData).unwrap(),
           },
           sectionType: values.pageTitleEn,
         };
@@ -137,12 +144,14 @@ const page = (props: Props) => {
         );
 
         if (!values?.contentImage[0]?.url) {
-          await deleteFileFromCloudinaryFn({
-            publicId: targetSection?.content?.image?.publicId,
-          }).unwrap();
+          const filename = targetSection?.content?.image[0];
+          const target = filename.split("uploads/").pop();
+          await deleteFileFn({ filename: target }).unwrap();
         }
         await updateBulkAboutPageFn(targetData).unwrap();
       } else {
+        const formData = new FormData();
+        formData.append("files", values?.contentImage[0]?.originFileObj);
         const targetData = {
           title: {
             tr: values.pageTitleTr,
@@ -155,10 +164,7 @@ const page = (props: Props) => {
               tr: values.pageContentTr,
               ru: values.pageContentRu,
             },
-            image: await uploadToCloudinary(
-              values?.contentImage[0]?.originFileObj,
-              setIsContentImageUploadToCloud
-            ),
+            image: await uploadFileFn(formData).unwrap(),
           },
           sectionType: values.pageTitleEn,
           parentPageId: getAllPageBySlugData?.id,
@@ -216,10 +222,10 @@ const page = (props: Props) => {
         pageContentRu: targetSection?.content?.text?.ru,
         contentImage: [
           {
-            uid: targetSection?.content?.image.publicId,
+            uid: 1,
             name: "image",
             status: "done",
-            url: targetSection?.content?.image.url,
+            url: targetSection?.content?.image[0],
           },
         ],
       });
@@ -420,14 +426,16 @@ const page = (props: Props) => {
             type="button"
             className="ml-auto mt-2 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
             disabled={
-              isContentImageUploadToCloud ||
+              uploadFileIsLoading ||
               createBulkAboutPageIsLoading ||
-              deleteFileFromCloudinaryIsLoading
+              deleteFileIsLoading ||
+              updateBulkAboutPageIsLoading
             }
           >
-            {isContentImageUploadToCloud ||
+            {uploadFileIsLoading ||
             createBulkAboutPageIsLoading ||
-            deleteFileFromCloudinaryIsLoading ? (
+            deleteFileIsLoading ||
+            updateBulkAboutPageIsLoading ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (
               <p className="uppercase font-medium">

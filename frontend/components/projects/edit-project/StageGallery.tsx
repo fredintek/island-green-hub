@@ -1,8 +1,12 @@
+import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
+  useDeleteFileMutation,
+  useGetSectionByPageIdQuery,
   useGetSectionByTypeQuery,
   useUpdateSectionMutation,
+  useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { Page } from "@/utils/interfaces";
 import { InboxOutlined } from "@ant-design/icons";
@@ -21,15 +25,22 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
   const [stage2Images, setStage2Images] = useState<any>([]);
   const [isImageUploadToCloud, setIsImageUploadToCloud] =
     useState<boolean>(false);
+  const [pageContentData, setPageContentData] = useState<any>({});
 
-  const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
-    "productStage2Images",
+  const { data: getSectionByTypeData } = useGetSectionByPageIdQuery(
+    pageData?.id || pageContentData?.id,
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,
       refetchOnFocus: true,
     }
   );
+
+  const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
+    useUploadFileMutation();
+
+  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
+    useDeleteFileMutation();
 
   const [
     deleteFileFromCloudinaryFn,
@@ -48,40 +59,48 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
   ] = useUpdateSectionMutation();
 
   const handleSubmit = async (values: any) => {
+    const targetSection = getSectionByTypeData?.data?.find((section: any) =>
+      section.type.includes("productStage2Images")
+    );
+
+    const prepareUpload = (value: any, formData: FormData, tag: string) => {
+      if (!value.url) {
+        formData.append("files", value.originFileObj);
+        formData.append("tags", tag);
+
+        return null;
+      }
+      return value.url;
+    };
     try {
-      let stage2Images = [];
-
+      let formData = new FormData();
+      let stage2Images: string[] = [];
       for (const value of values.stage2Images) {
-        let imageData;
+        const arr = prepareUpload(value, formData, "stage2Images");
 
-        if (!value?.url) {
-          // Upload new image to Cloudinary
-          imageData = await uploadToCloudinary(
-            value?.originFileObj,
-            setIsImageUploadToCloud
-          );
-
-          // Delete old image if `uid` exists
-          if (value?.uid) {
-            await deleteFileFromCloudinaryFn({
-              publicId: value.uid,
-            }).unwrap();
-          }
-        } else {
-          // Keep existing image data
-          imageData = {
-            publicId: value.uid,
-            url: value.url,
-          };
+        if (arr) {
+          stage2Images.push(arr);
         }
-
-        // Collect processed image data
-        stage2Images.push(imageData);
+      }
+      const isFormDataEmpty = formData.entries().next().done;
+      if (!isFormDataEmpty) {
+        const arr = await uploadFileFn(formData).unwrap();
+        ensureArray(arr.stage2Images)?.forEach((img: string) =>
+          stage2Images.push(img)
+        );
       }
       await updateSectionFn({
-        id: getSectionByTypeData?.data?.id,
+        id: targetSection?.id,
         content: stage2Images,
       }).unwrap();
+
+      // delete old files
+      await Promise.all(
+        targetSection?.content?.map(async (content: string) => {
+          const target = content.split("uploads/").pop();
+          return await deleteFileFn({ filename: target }).unwrap();
+        })
+      );
 
       // You can now use `stage2Images` to submit the final data
     } catch (error) {
@@ -90,22 +109,25 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
   };
 
   useEffect(() => {
-    if (getSectionByTypeData?.data?.content) {
+    const targetSection = getSectionByTypeData?.data?.find((section: any) =>
+      section.type.includes("productStage2Images")
+    );
+    if (targetSection) {
       setStage2Images(
-        getSectionByTypeData?.data?.content?.map((img: any) => ({
-          uid: img.publicId,
+        targetSection?.content?.map((img: any) => ({
+          uid: img,
           name: "image",
           status: "done",
-          url: img.url,
+          url: img,
         }))
       );
 
       form.setFieldsValue({
-        stage2Images: getSectionByTypeData?.data?.content?.map((img: any) => ({
-          uid: img.publicId,
+        stage2Images: targetSection?.content?.map((img: any) => ({
+          uid: img,
           name: "image",
           status: "done",
-          url: img.url,
+          url: img,
         })),
       });
     }
@@ -136,6 +158,13 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
     updateSectionData,
   ]);
 
+  useEffect(() => {
+    if (pageData) {
+      setPageContentData(pageData);
+    }
+  }, [pageData]);
+
+  if (!getSectionByTypeData?.data) return null;
   return (
     <Form form={form} layout="vertical" onFinish={handleSubmit}>
       <div className="border-2 border-secondaryShade dark:border-primaryShade border-dashed rounded-xl w-full">

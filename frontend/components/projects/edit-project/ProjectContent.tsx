@@ -1,9 +1,10 @@
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
-  useGetSectionByTypeQuery,
+  useDeleteFileMutation,
+  useGetSectionByPageIdQuery,
   useUpdateSectionMutation,
+  useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
+import { prepareFileUpload } from "@/utils";
 import { Page } from "@/utils/interfaces";
 import { PlusOutlined } from "@ant-design/icons";
 import { Form, Upload } from "antd";
@@ -26,23 +27,16 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
   const [form] = Form.useForm();
   const [projectFileList, setProjectFileList] = useState<any>([]);
   const [projectPdfList, setProjectPdfList] = useState<any>([]);
-  const [isImageUploadToCloud, setIsImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isPdfUploadToCloud, setIsPdfUploadToCloud] = useState<boolean>(false);
+  const [pageContentData, setPageContentData] = useState<any>({});
 
-  const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
-    "productContent",
+  const { data: getSectionByTypeData } = useGetSectionByPageIdQuery(
+    pageData?.id || pageContentData?.id,
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,
       refetchOnFocus: true,
     }
   );
-
-  const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
 
   const [
     updateSectionFn,
@@ -55,6 +49,12 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
     },
   ] = useUpdateSectionMutation();
 
+  const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
+    useUploadFileMutation();
+
+  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
+    useDeleteFileMutation();
+
   const handleUploadChange = ({ fileList }: any) => {
     setProjectFileList([fileList]);
     form.setFieldsValue({ projectImages: [...fileList] });
@@ -66,50 +66,48 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
   };
 
   const handleSubmit = async (values: any) => {
-    let projectImages;
-    let pdfImage;
-
+    const targetSection = getSectionByTypeData?.data?.find((section: any) =>
+      section.type.includes("productContent")
+    );
     try {
       /** Upload new image if needed */
-      if (!values.projectImages?.[0]?.url) {
-        projectImages = await uploadToCloudinary(
-          values.projectImages[0]?.originFileObj,
-          setIsImageUploadToCloud
-        );
-        if (values.projectImages?.[0]?.uid) {
-          await deleteFileFromCloudinaryFn({
-            publicId: values.projectImages[0]?.uid,
-          }).unwrap();
-        }
-      } else {
-        projectImages = {
-          publicId: values.projectImages[0]?.uid,
-          url: values.projectImages[0]?.url,
-        };
-      }
 
-      /** Upload new PDF if needed */
-      if (!values.projectPdf?.[0]?.url) {
-        pdfImage = await uploadToCloudinary(
-          values.projectPdf[0]?.originFileObj,
-          setIsPdfUploadToCloud
-        );
-        if (values.projectPdf?.[0]?.uid) {
-          await deleteFileFromCloudinaryFn({
-            publicId: values.projectPdf[0]?.uid,
-            resourceType: "raw",
-          }).unwrap();
-        }
-      } else {
-        pdfImage = {
-          publicId: values.projectPdf[0]?.uid,
-          url: values.projectPdf[0]?.url,
-        };
-      }
+      let imgFormData = new FormData();
+      let pdfFormData = new FormData();
+      let filesToDelete: string[] = [];
+
+      let projectImages = prepareFileUpload(
+        values,
+        "projectImages",
+        imgFormData,
+        "projectImages",
+        filesToDelete,
+        targetSection?.content?.image
+      );
+      let pdfImage = prepareFileUpload(
+        values,
+        "projectPdf",
+        pdfFormData,
+        "projectPdf",
+        filesToDelete,
+        targetSection?.content?.pdf
+      );
+
+      // Upload files if needed
+      if (!pdfImage) pdfImage = await uploadFileFn(pdfFormData).unwrap();
+      if (!projectImages)
+        projectImages = await uploadFileFn(imgFormData).unwrap();
+
+      // Ensure correct format after upload
+      pdfImage = typeof pdfImage === "string" ? pdfImage : pdfImage?.projectPdf;
+      projectImages =
+        typeof projectImages === "string"
+          ? projectImages
+          : projectImages?.projectImages;
 
       /** Construct final data */
       const targetData = {
-        id: getSectionByTypeData?.data?.id,
+        id: targetSection?.id,
         content: {
           description: {
             en: values.projectContentEn,
@@ -121,51 +119,60 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
         },
       };
       await updateSectionFn(targetData).unwrap();
+      await Promise.all(
+        filesToDelete?.map(async (filename) => {
+          const target = filename.split("uploads/").pop();
+          return await deleteFileFn({ filename: target }).unwrap();
+        })
+      );
     } catch (error) {
       console.error("Error uploading files:", error);
     }
   };
 
   useEffect(() => {
-    if (getSectionByTypeData?.data?.content) {
+    const targetSection = getSectionByTypeData?.data?.find((section: any) =>
+      section.type.includes("productContent")
+    );
+    if (targetSection) {
       setProjectFileList([
         {
-          uid: getSectionByTypeData?.data?.content?.image?.publicId,
+          uid: targetSection?.content?.image,
           name: "image",
           status: "done",
-          url: getSectionByTypeData?.data?.content?.image?.url,
+          url: targetSection?.content?.image,
         },
       ]);
 
       setProjectPdfList([
         {
-          uid: getSectionByTypeData?.data?.content?.pdf?.publicId,
+          uid: targetSection?.content?.pdf,
           name: "pdf",
           status: "done",
-          url: getSectionByTypeData?.data?.content?.pdf?.url,
+          url: targetSection?.content?.pdf,
         },
       ]);
 
       form.setFieldsValue({
         projectImages: [
           {
-            uid: getSectionByTypeData?.data?.content?.image?.publicId,
+            uid: targetSection?.content?.image,
             name: "image",
             status: "done",
-            url: getSectionByTypeData?.data?.content?.image?.url,
+            url: targetSection?.content?.image,
           },
         ],
         projectPdf: [
           {
-            uid: getSectionByTypeData?.data?.content?.pdf?.publicId,
+            uid: targetSection?.content?.pdf,
             name: "pdf",
             status: "done",
-            url: getSectionByTypeData?.data?.content?.pdf?.url,
+            url: targetSection?.content?.pdf,
           },
         ],
-        projectContentTr: getSectionByTypeData?.data?.content?.description?.tr,
-        projectContentEn: getSectionByTypeData?.data?.content?.description?.en,
-        projectContentRu: getSectionByTypeData?.data?.content?.description?.ru,
+        projectContentTr: targetSection?.content?.description?.tr,
+        projectContentEn: targetSection?.content?.description?.en,
+        projectContentRu: targetSection?.content?.description?.ru,
       });
     }
   }, [getSectionByTypeData, form]);
@@ -195,6 +202,13 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
     updateSectionData,
   ]);
 
+  useEffect(() => {
+    if (pageData) {
+      setPageContentData(pageData);
+    }
+  }, [pageData]);
+
+  if (!getSectionByTypeData?.data) return null;
   return (
     <Form onFinish={handleSubmit} form={form} layout="vertical">
       <div className="flex flex-col gap-10">
@@ -300,16 +314,12 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
         type="button"
         className="ml-auto px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
         disabled={
-          deleteFileFromCloudinaryIsLoading ||
-          updateSectionIsLoading ||
-          isImageUploadToCloud ||
-          isPdfUploadToCloud
+          uploadFileIsLoading || updateSectionIsLoading || deleteFileIsLoading
         }
       >
-        {deleteFileFromCloudinaryIsLoading ||
+        {uploadFileIsLoading ||
         updateSectionIsLoading ||
-        isImageUploadToCloud ||
-        isPdfUploadToCloud ? (
+        deleteFileIsLoading ? (
           <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
         ) : (
           <p className="uppercase font-medium">Save</p>

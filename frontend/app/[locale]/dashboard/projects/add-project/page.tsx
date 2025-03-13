@@ -4,6 +4,10 @@ import {
   useCreateBulkProjectPageMutation,
   useGetPageBySlugQuery,
 } from "@/redux/api/pageApiSlice";
+import {
+  useDeleteFileMutation,
+  useUploadFileMutation,
+} from "@/redux/api/sectionApiSlice";
 import { useAppSelector } from "@/redux/store";
 import { DeleteOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
 import { Button, Form, Input, Upload } from "antd";
@@ -25,6 +29,9 @@ export const validateArray = (
   }
   return arr;
 };
+
+export const ensureArray = (value: any) =>
+  Array.isArray(value) ? value : [value];
 
 const page = (props: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)
@@ -71,6 +78,28 @@ const page = (props: Props) => {
       data: createBulkProjectData,
     },
   ] = useCreateBulkProjectPageMutation();
+
+  const [
+    uploadFileFn,
+    {
+      isError: uploadFileIsError,
+      isLoading: uploadFileIsLoading,
+      isSuccess: uploadFileIsSuccess,
+      error: uploadFileError,
+      data: uploadFileData,
+    },
+  ] = useUploadFileMutation();
+
+  const [
+    deleteFileFn,
+    {
+      isError: deleteFileIsError,
+      isLoading: deleteFileIsLoading,
+      isSuccess: deleteFileIsSuccess,
+      error: deleteFileError,
+      data: deleteFileData,
+    },
+  ] = useDeleteFileMutation();
 
   const handleUploadChange = ({ fileList }: any) => {
     setProjectFileList(fileList);
@@ -128,50 +157,39 @@ const page = (props: Props) => {
      * projectHouseDisplayImage*, [projectHouseGallery], [stage2Images]
      */
     try {
-      let projectHouseGallery: { publicId: string; url: string }[];
-      let stage2Images:
-        | { publicId: string; url: string }
-        | { publicId: string; url: string }[];
-      projectHouseGallery = values?.projectHouseGallery
-        ? ((await uploadToCloudinary(
-            values?.projectHouseGallery?.map(
-              (fileObj: any) => fileObj.originFileObj
-            ),
-            setCloudLoading1
-          )) as { publicId: string; url: string }[])
-        : [];
+      let formData = new FormData();
+      let tags: string[] = [];
+      let files: File[] = [];
 
-      stage2Images = values?.stage2Images
-        ? await uploadToCloudinary(
-            values?.stage2Images?.map((fileObj: any) => fileObj.originFileObj),
-            setCloudLoading2
-          )
-        : [];
+      // Helper function to add files and tags
+      const addFilesWithTags = (fileList: any[], tag: string) => {
+        fileList?.forEach((fileObj) => {
+          files.push(fileObj.originFileObj);
+          tags.push(tag);
+        });
+      };
 
-      const projectHomeImages = await uploadToCloudinary(
-        values?.projectHomeImage?.map((fileObj: any) => fileObj.originFileObj),
-        setCloudLoading3
+      addFilesWithTags(values?.projectHouseGallery, "projectHouseGallery");
+      addFilesWithTags(values?.stage2Images, "stage2Images");
+      addFilesWithTags(values?.projectHomeImage, "projectHomeImage");
+      addFilesWithTags(
+        values?.projectHouseCoverImage,
+        "projectHouseCoverImage"
+      );
+      addFilesWithTags(values?.projectImages, "projectImages");
+      addFilesWithTags(values?.projectPdf, "projectPdf");
+      addFilesWithTags(
+        values?.projectHouseDisplayImage,
+        "projectHouseDisplayImage"
       );
 
-      const projectHouseCoverImage = await uploadToCloudinary(
-        values?.projectHouseCoverImage[0]?.originFileObj,
-        setCloudLoading4
-      );
+      // Append files as a single array
+      files.forEach((file) => formData.append("files", file));
 
-      const projectImage = await uploadToCloudinary(
-        values?.projectImages[0]?.originFileObj,
-        setCloudLoading5
-      );
+      // Append the tags array as a JSON string
+      formData.append("tags", JSON.stringify(tags));
 
-      const projectPdf = await uploadToCloudinary(
-        values?.projectPdf[0]?.originFileObj,
-        setCloudLoading6
-      );
-
-      const projectHouseDisplayImage = await uploadToCloudinary(
-        values?.projectHouseDisplayImage[0]?.originFileObj,
-        setCloudLoading7
-      );
+      const uploadedFiles = await uploadFileFn(formData).unwrap();
 
       const data = {
         parentPageId: getAllPageBySlugData?.id,
@@ -180,8 +198,8 @@ const page = (props: Props) => {
           ru: values?.projectTitleRu,
           tr: values?.projectTitleTr,
         },
-        projectImage: projectImage,
-        projectPdf: projectPdf,
+        projectImage: uploadedFiles["projectImages"],
+        projectPdf: uploadedFiles["projectPdf"],
         productLink: values.productLink,
         projectContent: {
           en: values.projectContentEn,
@@ -193,9 +211,9 @@ const page = (props: Props) => {
           ru: values.projectHouseTitleRu,
           tr: values.projectHouseTitleTr,
         },
-        projectHomeImage: projectHomeImages,
-        projectHouseCoverImage: projectHouseCoverImage,
-        projectHouseDisplayImage: projectHouseDisplayImage,
+        projectHomeImage: ensureArray(uploadedFiles["projectHomeImage"]),
+        projectHouseCoverImage: uploadedFiles["projectHouseCoverImage"],
+        projectHouseDisplayImage: uploadedFiles["projectHouseDisplayImage"],
         projectHomeContent: {
           en: values.projectHomeContentEn,
           ru: values.projectHomeContentRu,
@@ -216,10 +234,8 @@ const page = (props: Props) => {
           ru: values.optionalProjectFeaturesRu,
           tr: values.optionalProjectFeaturesTr,
         },
-        projectHouseGallery: projectHouseGallery?.map((obj) => ({
-          imageUrl: obj,
-        })),
-        stage2Images: stage2Images,
+        projectHouseGallery: ensureArray(uploadedFiles["projectHouseGallery"]),
+        stage2Images: ensureArray(uploadedFiles["stage2Images"]),
         projectLocation: values.projectLocation,
         youtubeVideos: validateArray(values.youtubeVideos),
       };
@@ -263,6 +279,17 @@ const page = (props: Props) => {
     createBulkProjectError,
     createBulkProjectData,
   ]);
+
+  useEffect(() => {
+    // if (uploadFileIsSuccess) {
+    //   toast.success(uploadFileData?.message);
+    // }
+
+    if (uploadFileIsError) {
+      const customError = uploadFileError as { data: any; status: number };
+      toast.error(customError.data.message + ",Each file cannot exceed 10MB");
+    }
+  }, [uploadFileIsSuccess, uploadFileIsError, uploadFileError, uploadFileData]);
 
   return (
     <section className="flex flex-col gap-10">

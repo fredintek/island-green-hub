@@ -19,6 +19,7 @@ import { Create360PageDto } from '../dtos/create-360-page.dto';
 import { Update360PageDto } from '../dtos/update-360-page.dto';
 import { CreateBulkAboutPageDto } from '../dtos/create-about-page.dto';
 import { UpdateBulkAboutPageDto } from '../dtos/update-about-page.dto';
+import { deleteServerFile } from 'src/utils/uploadFileToSystem';
 
 @Injectable()
 export class PageService {
@@ -531,27 +532,30 @@ export class PageService {
         throw new NotFoundException(`Page with ID ${id} not found`);
       }
 
-      const publicIdsToDelete: string[] = [];
-
       // Check Project House for images
       for (const projectHouse of page.projectHouse) {
-        if (projectHouse.coverImage?.publicId) {
-          publicIdsToDelete.push(projectHouse.coverImage.publicId);
+        if (projectHouse.coverImage) {
+          const target = projectHouse.coverImage.split('uploads/').pop() || '';
+          await deleteServerFile(target);
         }
-        if (projectHouse.displayImage?.publicId) {
-          publicIdsToDelete.push(projectHouse.displayImage.publicId);
+        if (projectHouse.displayImage) {
+          const target =
+            projectHouse.displayImage.split('uploads/').pop() || '';
+          await deleteServerFile(target);
         }
         if (projectHouse.gallery) {
           for (const galleryItem of projectHouse.gallery) {
-            if (galleryItem.imageUrl?.publicId) {
-              publicIdsToDelete.push(galleryItem.imageUrl.publicId);
+            if (galleryItem) {
+              const target = galleryItem.split('uploads/').pop() || '';
+              await deleteServerFile(target);
             }
           }
         }
         if (projectHouse.homeImages) {
           for (const homeImage of projectHouse.homeImages) {
-            if (homeImage.publicId) {
-              publicIdsToDelete.push(homeImage.publicId);
+            if (homeImage) {
+              const target = homeImage.split('uploads/').pop() || '';
+              await deleteServerFile(target);
             }
           }
         }
@@ -561,22 +565,12 @@ export class PageService {
       for (const section of page.sections) {
         if (section.content && Array.isArray(section.content)) {
           for (const contentItem of section.content) {
-            if (contentItem?.publicId) {
-              publicIdsToDelete.push(contentItem.publicId);
+            if (contentItem) {
+              const target = contentItem.split('uploads/').pop() || '';
+              await deleteServerFile(target);
             }
           }
         }
-      }
-
-      try {
-        // Delete images from Cloudinary
-        for (const publicId of publicIdsToDelete) {
-          await this.cloudinaryService.deleteImage({ publicId });
-        }
-      } catch (error) {
-        throw new InternalServerErrorException(
-          'Failed to delete images from cloud',
-        );
       }
 
       // Delete the page and its related entities using QueryRunner

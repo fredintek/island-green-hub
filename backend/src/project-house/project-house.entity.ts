@@ -34,19 +34,13 @@ export class ProjectHouse {
     type: 'json',
     nullable: false,
   })
-  coverImage: {
-    publicId: string;
-    url: string;
-  };
+  coverImage: string;
 
   @Column({
     type: 'json',
     nullable: false,
   })
-  displayImage: {
-    publicId: string;
-    url: string;
-  };
+  displayImage: string;
 
   @Column({
     type: 'json',
@@ -79,13 +73,7 @@ export class ProjectHouse {
   };
 
   @Column({ type: 'json', nullable: true })
-  gallery: {
-    imageUrl: {
-      publicId: string;
-      url: string;
-    };
-    tag?: string;
-  }[];
+  gallery: string[];
 
   @Column({
     type: 'json',
@@ -108,10 +96,7 @@ export class ProjectHouse {
     type: 'json',
     nullable: true,
   })
-  homeImages: {
-    publicId: string;
-    url: string;
-  }[];
+  homeImages: string[];
 
   @BeforeInsert()
   @BeforeUpdate()

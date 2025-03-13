@@ -87,7 +87,7 @@ const page = (props: Props) => {
       if (record) {
         const targetData = {
           id: record?.id,
-          sectionType: "360-product-link",
+          sectionType: `${record?.slug}-360`,
           title: {
             tr: values.pageTitleTr,
             en: values.pageTitleEn,

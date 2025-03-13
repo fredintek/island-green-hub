@@ -5,7 +5,6 @@ import {
   useGetPageBySlugQuery,
   useUpdatePageMutation,
 } from "@/redux/api/pageApiSlice";
-import { Page } from "@/utils/interfaces";
 import {
   DeleteOutlined,
   EditOutlined,
@@ -13,20 +12,21 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table, Tooltip, Upload } from "antd";
-import { ColumnsType } from "antd/es/table";
 import { useLocale } from "next-intl";
 import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   useCreateSectionMutation,
+  useDeleteFileMutation,
   useLazyGetSectionByPageIdQuery,
   useRemoveLinkFromSectionContentMutation,
   useUpdateSectionMutation,
+  useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { toast } from "react-toastify";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import { stripHtml } from "@/utils";
+import { ensureArray } from "../projects/add-project/page";
 const { Dragger } = Upload;
 
 type Props = {};
@@ -42,29 +42,15 @@ const page = (props: Props) => {
   const [openModal, setOpenModal] = useState(false);
   const [uploadinToCloud, setUploadinToCloud] = useState(false);
   const [blogFileList, setBlogFileList] = useState<any>([]);
-  const [editingPage, setEditingPage] = useState<Partial<Page> | null>(null);
-  const {
-    data: getAllPageBySlugData,
-    isLoading: getAllPageBySlugIsLoading,
-    isError: getAllPageBySlugIsError,
-    error: getAllPageBySlugError,
-    refetch: getAllPageBySlugRefetch,
-  } = useGetPageBySlugQuery("blog", {
-    refetchOnMountOrArgChange: true,
-    refetchOnReconnect: true,
-    refetchOnFocus: true,
-  });
+  const [editingPage, setEditingPage] = useState<any | null>(null);
+  const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
+    useGetPageBySlugQuery("blog", {
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+      refetchOnFocus: true,
+    });
 
-  const [
-    getSectionByPageIdFn,
-    {
-      data: getSectionByPageIdData,
-      isLoading: getSectionByPageIdIsLoading,
-      isError: getSectionByPageIdIsError,
-      error: getSectionByPageIdError,
-    },
-  ] = useLazyGetSectionByPageIdQuery();
-
+  const [getSectionByPageIdFn] = useLazyGetSectionByPageIdQuery();
   const [
     createPageFn,
     {
@@ -76,22 +62,13 @@ const page = (props: Props) => {
     },
   ] = useCreatePageMutation();
 
-  const [
-    updatePageFn,
-    {
-      isError: updatePageIsError,
-      isLoading: updatePageIsLoading,
-      isSuccess: updatePageIsSuccess,
-      error: updatePageError,
-      data: updatePageData,
-    },
-  ] = useUpdatePageMutation();
+  const [updatePageFn, { isLoading: updatePageIsLoading }] =
+    useUpdatePageMutation();
 
   const [
     deletePageFn,
     {
       isError: deletePageIsError,
-      isLoading: deletePageIsLoading,
       isSuccess: deletePageIsSuccess,
       error: deletePageError,
       data: deletePageData,
@@ -125,30 +102,31 @@ const page = (props: Props) => {
     { isLoading: deleteFileFromCloudinaryIsLoading },
   ] = useDeleteFileFromCloudinaryMutation();
 
-  const [
-    removeLinkFn,
-    {
-      isError: removeLinkIsError,
-      isLoading: removeLinkIsLoading,
-      isSuccess: removeLinkIsSuccess,
-      error: removeLinkError,
-      data: removeLinkData,
-    },
-  ] = useRemoveLinkFromSectionContentMutation();
+  const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
+    useUploadFileMutation();
 
-  const handleEdit = async (record: Partial<Page>) => {
+  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
+    useDeleteFileMutation();
+
+  const handleEdit = async (record: any) => {
     const sections = await getSectionByPageIdFn(record?.id).unwrap();
     const targetSection = sections?.data.find((obj: any) =>
       obj.type.includes("blogContent")
     );
-    setEditingPage(record);
+    setEditingPage({
+      ...record,
+      sectionId: targetSection?.id,
+      content: targetSection?.content,
+      type: targetSection?.type,
+      sortId: targetSection?.sortId,
+    });
     setOpenModal(true);
     setBlogFileList(
       targetSection?.content?.blogImages?.map((img: any) => ({
-        uid: img.publicId,
+        uid: img,
         name: "image",
         status: "done",
-        url: img.url,
+        url: img,
       }))
     );
     form.setFieldsValue({
@@ -162,10 +140,10 @@ const page = (props: Props) => {
       blogContentEn: targetSection?.content?.blogContent?.en,
       blogContentRu: targetSection?.content?.blogContent?.ru,
       blogImages: targetSection?.content?.blogImages?.map((img: any) => ({
-        uid: img.publicId,
+        uid: img,
         name: "image",
         status: "done",
-        url: img.url,
+        url: img,
       })),
     });
   };
@@ -177,13 +155,32 @@ const page = (props: Props) => {
 
   const handleFormSubmit = async (values: any) => {
     if (editingPage) {
-      try {
-        const sections = await getSectionByPageIdFn(editingPage?.id).unwrap();
-        const targetSection = sections?.data.find((obj: any) =>
-          obj.type.includes("blogContent")
-        );
+      const prepareUpload = (value: any, formData: FormData, tag: string) => {
+        if (!value.url) {
+          formData.append("files", value.originFileObj);
+          formData.append("tags", tag);
 
-        const oldBlogImages = targetSection?.content?.blogImages;
+          return null;
+        }
+        return value.url;
+      };
+      try {
+        let formData = new FormData();
+        let blogImages: string[] = [];
+        for (const value of values.blogImages) {
+          const arr = prepareUpload(value, formData, "blogImages");
+
+          if (arr) {
+            blogImages.push(arr);
+          }
+        }
+        const isBlogFormDataEmpty = formData.entries().next().done;
+        if (!isBlogFormDataEmpty) {
+          const arr = await uploadFileFn(formData).unwrap();
+          ensureArray(arr.blogImages)?.forEach((img: string) =>
+            blogImages.push(img)
+          );
+        }
 
         // update page
         const updatedPage = await updatePageFn({
@@ -197,14 +194,8 @@ const page = (props: Props) => {
         }).unwrap();
         // update section for target page
         if (updatedPage?.id) {
-          const uploadedImages = await uploadToCloudinary(
-            values?.blogImages
-              ?.filter((obj: any) => !obj.url)
-              ?.map((obj: any) => obj.originFileObj) as File[]
-          );
-
           const updatedSection = await updateSectionFn({
-            id: targetSection?.id,
+            id: editingPage?.sectionId,
             page: updatedPage?.id,
             type: `${values.blogTitleEn}-blogContent`,
             sortId: 0,
@@ -219,38 +210,18 @@ const page = (props: Props) => {
                 en: stripHtml(values.blogTitleEn),
                 ru: stripHtml(values.blogTitleRu),
               },
-              blogImages: [
-                ...values?.blogImages?.filter((obj: any) => obj.url),
-                ...(Array.isArray(uploadedImages) ? uploadedImages : []),
-              ],
+              blogImages,
             },
           }).unwrap();
 
           if (updatedSection?.content) {
-            const newBlogImages = updatedSection?.content?.blogImages;
-
-            // Function to find images in old that are NOT in new
-            const imagesToDelete = oldBlogImages?.filter(
-              (oldImage: any) =>
-                !newBlogImages.some(
-                  (newImage: any) => newImage.url === oldImage.url
-                )
+            // delete old images
+            Promise.all(
+              editingPage?.content?.blogImages?.map(async (img: string) => {
+                const target = img.split("uploads/").pop();
+                await deleteFileFn({ filename: target }).unwrap();
+              })
             );
-
-            // delete old blog images from server
-            if (imagesToDelete.length > 0) {
-              await Promise.all(
-                imagesToDelete?.map(async (img: any) => {
-                  await deleteFileFromCloudinaryFn({
-                    publicId: img.publicId,
-                  }).unwrap();
-                  await removeLinkFn({
-                    sectionId: targetSection?.id,
-                    link: img.publicId,
-                  }).unwrap();
-                })
-              );
-            }
           }
         }
 
@@ -273,6 +244,11 @@ const page = (props: Props) => {
           parentPage: getAllPageBySlugData?.id,
         }).unwrap();
 
+        const formData = new FormData();
+        values?.blogImages?.map((obj: any) =>
+          formData.append("files", obj.originFileObj)
+        );
+
         // create section for target page
         if (createdPage?.data) {
           await createSectionFn({
@@ -290,10 +266,7 @@ const page = (props: Props) => {
                 en: stripHtml(values.blogTitleEn),
                 ru: stripHtml(values.blogTitleRu),
               },
-              blogImages: await uploadToCloudinary(
-                values?.blogImages?.map((obj: any) => obj.originFileObj),
-                setUploadinToCloud
-              ),
+              blogImages: await uploadFileFn(formData).unwrap(),
             },
           }).unwrap();
         }
@@ -309,16 +282,15 @@ const page = (props: Props) => {
 
   const handleDeletePage = async (record: any) => {
     const sections = await getSectionByPageIdFn(record?.id).unwrap();
-    const targetSection = sections?.data.find(
-      (obj: any) => obj.type === `${record?.title.en}-blogContent`
+    const targetSection = sections?.data.find((obj: any) =>
+      obj.type.includes("blogContent")
     );
     try {
       await deletePageFn(record?.id).unwrap();
       await Promise.all(
-        targetSection?.content?.blogImages?.map(async (img: any) => {
-          await deleteFileFromCloudinaryFn({
-            publicId: img.publicId,
-          }).unwrap();
+        targetSection?.content?.blogImages?.map((img: string) => {
+          const target = img.split("uploads/").pop();
+          return deleteFileFn({ filename: target }).unwrap();
         })
       );
     } catch (error) {
@@ -326,17 +298,17 @@ const page = (props: Props) => {
     }
   };
 
-  const blogColumn: ColumnsType<Partial<Page>> = [
+  const blogColumn = [
     {
       title: "Name",
       dataIndex: "title",
       key: "title",
-      render: (text, record) => text[locale],
+      render: (text: any, record: any) => text[locale],
     },
     {
       title: "Action",
       key: "action",
-      render: (text: any, record: Partial<Page>) => (
+      render: (text: any, record: any) => (
         <div className="flex items-center gap-4 text-lg text-gray-500">
           <button type="button" className="cursor-pointer">
             <Tooltip>
@@ -597,18 +569,16 @@ const page = (props: Props) => {
             createSectionIsLoading ||
             updatePageIsLoading ||
             updateSectionIsLoading ||
-            deleteFileFromCloudinaryIsLoading ||
-            removeLinkIsLoading ||
-            uploadinToCloud
+            uploadFileIsLoading ||
+            deleteFileIsLoading
           }
         >
           {createPageIsLoading ||
           createSectionIsLoading ||
           updatePageIsLoading ||
           updateSectionIsLoading ||
-          deleteFileFromCloudinaryIsLoading ||
-          removeLinkIsLoading ||
-          uploadinToCloud ? (
+          uploadFileIsLoading ||
+          deleteFileIsLoading ? (
             <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
           ) : (
             <p className="uppercase font-medium">

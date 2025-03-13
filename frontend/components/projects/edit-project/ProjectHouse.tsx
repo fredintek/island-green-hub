@@ -1,8 +1,14 @@
 "use client";
+import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { useUpdateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
+import {
+  useDeleteFileMutation,
+  useUploadFileMutation,
+} from "@/redux/api/sectionApiSlice";
+import { prepareFileUpload } from "@/utils";
 import { Page } from "@/utils/interfaces";
 import { EditOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Modal, Upload } from "antd";
@@ -52,6 +58,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     refetchOnFocus: true,
   });
 
+  // console.log("getPageBySlugData", getPageBySlugData);
+
   const [
     deleteFileFromCloudinaryFn,
     { isLoading: deleteFileFromCloudinaryIsLoading },
@@ -67,6 +75,12 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       isSuccess: updateProjectHouseIsSuccess,
     },
   ] = useUpdateProjectHouseMutation();
+
+  const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
+    useUploadFileMutation();
+
+  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
+    useDeleteFileMutation();
 
   const handleUploadChangeHomeImage = ({ fileList }: any) => {
     setProjectHomeImageList(fileList);
@@ -84,123 +98,112 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   };
 
   const handleSubmit = async (values: any) => {
+    const targetProjectHouse = getPageBySlugData?.projectHouse?.find(
+      (obj: any) => obj?.id === record?.id
+    );
+
+    const prepareUpload = (value: any, formData: FormData, tag: string) => {
+      if (!value.url) {
+        formData.append("files", value.originFileObj);
+        formData.append("tags", tag);
+
+        return null;
+      }
+      return value.url;
+    };
     try {
-      let coverImage;
-      let displayImage;
-      let gallery = [];
-      let homeImages = [];
+      let coverImageFormData = new FormData();
+      let displayImageFormData = new FormData();
 
-      /**
-       * Cover Image
-       */
-      if (!values.projectHouseCoverImage?.[0]?.url) {
-        coverImage = await uploadToCloudinary(
-          values.projectHouseCoverImage[0]?.originFileObj,
-          setIsCoverImageUploadToCloud
+      let projectHouseCoverImage = prepareFileUpload(
+        values,
+        "projectHouseCoverImage",
+        coverImageFormData,
+        "projectHouseCoverImage",
+        [],
+        ""
+      );
+
+      let projectHouseDisplayImage = prepareFileUpload(
+        values,
+        "projectHouseDisplayImage",
+        displayImageFormData,
+        "projectHouseDisplayImage",
+        [],
+        ""
+      );
+
+      if (!projectHouseCoverImage)
+        projectHouseCoverImage = await uploadFileFn(
+          coverImageFormData
+        ).unwrap();
+      if (!projectHouseDisplayImage)
+        projectHouseDisplayImage = await uploadFileFn(
+          displayImageFormData
+        ).unwrap();
+
+      projectHouseCoverImage =
+        typeof projectHouseCoverImage === "string"
+          ? projectHouseCoverImage
+          : projectHouseCoverImage?.projectHouseCoverImage;
+      projectHouseDisplayImage =
+        typeof projectHouseDisplayImage === "string"
+          ? projectHouseDisplayImage
+          : projectHouseDisplayImage?.projectHouseDisplayImage;
+
+      // project house gallery
+      let galleryFormData = new FormData();
+      let galleryImages: string[] = [];
+      for (const value of values.projectHouseGallery) {
+        const arr = prepareUpload(
+          value,
+          galleryFormData,
+          "projectHouseGallery"
         );
-        if (values.projectHouseCoverImage?.[0]?.uid) {
-          await deleteFileFromCloudinaryFn({
-            publicId: values.projectHouseCoverImage[0]?.uid,
-          }).unwrap();
+
+        if (arr) {
+          galleryImages.push(arr);
         }
-      } else {
-        coverImage = {
-          publicId: values.projectHouseCoverImage[0]?.uid,
-          url: values.projectHouseCoverImage[0]?.url,
-        };
+      }
+      const isGalleryFormDataEmpty = galleryFormData.entries().next().done;
+      if (!isGalleryFormDataEmpty) {
+        const arr = await uploadFileFn(galleryFormData).unwrap();
+        ensureArray(arr.projectHouseGallery)?.forEach((img: string) =>
+          galleryImages.push(img)
+        );
       }
 
-      /**
-       * Display Image
-       */
-      if (!values.projectHouseDisplayImage?.[0]?.url) {
-        displayImage = await uploadToCloudinary(
-          values.projectHouseDisplayImage[0]?.originFileObj,
-          setIsDisplayImageUploadToCloud
-        );
-        if (values.projectHouseDisplayImage?.[0]?.uid) {
-          await deleteFileFromCloudinaryFn({
-            publicId: values.projectHouseDisplayImage[0]?.uid,
-          }).unwrap();
-        }
-      } else {
-        displayImage = {
-          publicId: values.projectHouseDisplayImage[0]?.uid,
-          url: values.projectHouseDisplayImage[0]?.url,
-        };
-      }
-
-      /**
-       * Home Images
-       */
+      // project home gallery
+      let homeGalleryFormData = new FormData();
+      let homeGalleryImages: string[] = [];
       for (const value of values.projectHomeImage) {
-        let imageData;
+        const arr = prepareUpload(
+          value,
+          homeGalleryFormData,
+          "projectHomeImage"
+        );
 
-        if (!value?.url) {
-          // Upload new image to Cloudinary
-          imageData = await uploadToCloudinary(
-            value?.originFileObj,
-            setIsHomeImageUploadToCloud
-          );
-
-          // Delete old image if `uid` exists
-          if (value?.uid) {
-            await deleteFileFromCloudinaryFn({
-              publicId: value.uid,
-            }).unwrap();
-          }
-        } else {
-          // Keep existing image data
-          imageData = {
-            publicId: value.uid,
-            url: value.url,
-          };
+        if (arr) {
+          homeGalleryImages.push(arr);
         }
-
-        // Collect processed image data
-        homeImages.push(imageData);
       }
-
-      /**
-       * Gallery
-       */
-      if (values?.projectHouseGallery?.length > 0) {
-        for (const value of values.projectHouseGallery) {
-          let imageData;
-
-          if (!value?.url) {
-            // Upload new image to Cloudinary
-            imageData = await uploadToCloudinary(
-              value?.originFileObj,
-              setIsGalleryImageUploadToCloud
-            );
-
-            // Delete old image if `uid` exists
-            if (value?.uid) {
-              await deleteFileFromCloudinaryFn({
-                publicId: value.uid,
-              }).unwrap();
-            }
-          } else {
-            // Keep existing image data
-            imageData = {
-              publicId: value.uid,
-              url: value.url,
-            };
-          }
-
-          // Collect processed image data
-          gallery.push({ imageUrl: imageData });
-        }
+      const isHomeGalleryFormDataEmpty = homeGalleryFormData
+        .entries()
+        .next().done;
+      if (!isHomeGalleryFormDataEmpty) {
+        const arr = await uploadFileFn(homeGalleryFormData).unwrap();
+        ensureArray(arr.projectHomeImage)?.forEach((img: string) =>
+          homeGalleryImages.push(img)
+        );
       }
 
       // DATA
       const targetData = {
         id: record?.id,
-        coverImage,
-        displayImage,
-        gallery,
-        homeImages,
+        coverImage: projectHouseCoverImage,
+        displayImage: projectHouseDisplayImage,
+        gallery: galleryImages,
+        homeImages: homeGalleryImages,
         title: {
           en: values.projectHouseTitleEn,
           tr: values.projectHouseTitleTr,
@@ -231,6 +234,26 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       await updateProjectHouseFn(targetData).unwrap();
       setIsOpenModal(false);
       setRecord(null);
+
+      // delete old files
+      await Promise.all(
+        targetProjectHouse?.homeImages?.map(async (content: string) => {
+          const target = content.split("uploads/").pop();
+          return await deleteFileFn({ filename: target }).unwrap();
+        })
+      );
+      await Promise.all(
+        targetProjectHouse?.gallery?.map(async (content: string) => {
+          const target = content.split("uploads/").pop();
+          return await deleteFileFn({ filename: target }).unwrap();
+        })
+      );
+      await deleteFileFn({
+        filename: targetProjectHouse?.coverImage?.split("uploads/").pop(),
+      }).unwrap();
+      await deleteFileFn({
+        filename: targetProjectHouse?.displayImage?.split("uploads/").pop(),
+      }).unwrap();
     } catch (error) {
       console.error(error);
     }
@@ -241,8 +264,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       const coverImage = record.coverImage
         ? [
             {
-              url: record.coverImage.url,
-              uid: record.coverImage.publicId,
+              url: record.coverImage,
+              uid: record.coverImage,
               name: "image",
               status: "done",
             },
@@ -251,8 +274,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       const displayImage = record.displayImage
         ? [
             {
-              url: record.displayImage.url,
-              uid: record.displayImage.publicId,
+              url: record.displayImage,
+              uid: record.displayImage,
               name: "image",
               status: "done",
             },
@@ -260,16 +283,16 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         : [];
       const homeImages = record.homeImages
         ? record?.homeImages?.map((img: any) => ({
-            url: img.url,
-            uid: img.publicId,
+            url: img,
+            uid: img,
             name: "image",
             status: "done",
           }))
         : [];
       const gallery = record.gallery
         ? record?.gallery?.map((img: any) => ({
-            url: img.imageUrl.url,
-            uid: img.imageUrl.publicId,
+            url: img,
+            uid: img,
             name: "image",
             status: "done",
           }))
@@ -436,6 +459,7 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
                 accept="image/*"
                 fileList={projectHouseCoverImageFileList}
                 onChange={handleUploadChangeProjectHouseCoverImage}
+                maxCount={1}
               >
                 <PlusOutlined />
               </Upload>
@@ -461,6 +485,7 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
                 accept="image/*"
                 fileList={projectHouseDisplayImageFileList}
                 onChange={handleUploadChangeProjectHouseDisplayImage}
+                maxCount={1}
               >
                 <PlusOutlined />
               </Upload>
@@ -711,19 +736,13 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
             type="button"
             className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
             disabled={
-              isCoverImageUploadToCloud ||
-              isDisplayImageUploadToCloud ||
-              isHomeImageUploadToCloud ||
-              isGalleryImageUploadToCloud ||
-              deleteFileFromCloudinaryIsLoading ||
+              uploadFileIsLoading ||
+              deleteFileIsLoading ||
               updateProjectHouseIsLoading
             }
           >
-            {isCoverImageUploadToCloud ||
-            isDisplayImageUploadToCloud ||
-            isHomeImageUploadToCloud ||
-            isGalleryImageUploadToCloud ||
-            deleteFileFromCloudinaryIsLoading ||
+            {uploadFileIsLoading ||
+            deleteFileIsLoading ||
             updateProjectHouseIsLoading ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (

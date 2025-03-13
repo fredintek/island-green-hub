@@ -25,3 +25,23 @@ export const getImagePath = (filename: string) => {
 
   return `${backendUrl}/uploads/${filename}`;
 };
+
+export const prepareFileUpload = (
+  values: any,
+  key: string,
+  formData: FormData,
+  tag: string,
+  filesToDelete: string[],
+  targetPath?: string
+) => {
+  if (!values[key]?.[0]?.url) {
+    formData.append("files", values[key]?.[0]?.originFileObj);
+    formData.append("tags", tag);
+
+    if (targetPath && filesToDelete?.length > 0) {
+      filesToDelete?.push(targetPath?.split("uploads/")?.pop() as string);
+    }
+    return null; // Indicates file needs to be uploaded
+  }
+  return values[key][0]?.url; // Return existing URL if available
+};

@@ -22,10 +22,12 @@ export class CreateBulkProjectDto {
   projectTitle: MultilingualTextDto;
 
   @IsNotEmpty()
-  projectImage: ImageUrlDto;
+  @IsString()
+  projectImage: string;
 
   @IsNotEmpty()
-  projectPdf: ImageUrlDto;
+  @IsString()
+  projectPdf: string;
 
   @IsString()
   @IsNotEmpty()
@@ -39,15 +41,16 @@ export class CreateBulkProjectDto {
 
   @IsArray()
   @IsNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => ImageUrlDto)
-  projectHomeImage: ImageUrlDto[];
+  @IsString({ each: true })
+  projectHomeImage: string[];
 
   @IsNotEmpty()
-  projectHouseCoverImage: ImageUrlDto;
+  @IsString()
+  projectHouseCoverImage: string;
 
   @IsNotEmpty()
-  projectHouseDisplayImage: ImageUrlDto;
+  @IsString()
+  projectHouseDisplayImage: string;
 
   @IsNotEmpty()
   projectHomeContent: MultilingualTextDto;
@@ -63,15 +66,13 @@ export class CreateBulkProjectDto {
 
   @IsArray()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => GalleryImageDto)
-  projectHouseGallery?: GalleryImageDto[];
+  @IsString({ each: true })
+  projectHouseGallery?: string[];
 
   @IsArray()
   @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => ImageUrlDto)
-  stage2Images?: ImageUrlDto[];
+  @IsString({ each: true })
+  stage2Images?: string[];
 
   @IsString()
   @IsOptional()

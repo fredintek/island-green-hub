@@ -69,16 +69,12 @@ export class CreateProjectHouseDto {
   title: MultilingualTextDto;
 
   @IsNotEmpty()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => ImageUrlDto)
-  coverImage?: ImageUrlDto;
+  @IsString()
+  coverImage?: string;
 
   @IsNotEmpty()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => ImageUrlDto)
-  displayImage?: ImageUrlDto;
+  @IsString()
+  displayImage?: string;
 
   @IsNotEmpty()
   @ValidateNested()
@@ -96,10 +92,8 @@ export class CreateProjectHouseDto {
   optionalFeatures?: OptionalMultilingualTextDto;
 
   @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => GalleryImageDto)
-  gallery?: GalleryImageDto[];
+  @IsString({ each: true })
+  gallery?: string[];
 
   @IsNotEmpty()
   @ValidateNested()
@@ -107,8 +101,6 @@ export class CreateProjectHouseDto {
   homeText: MultilingualTextDto;
 
   @IsNotEmpty()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ImageUrlDto)
-  homeImages: ImageUrlDto[];
+  @IsString({ each: true })
+  homeImages: string[];
 }

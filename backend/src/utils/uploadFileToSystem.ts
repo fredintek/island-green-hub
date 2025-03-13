@@ -39,11 +39,11 @@ export const getFileUpload = async (file: Express.Multer.File) => {
   return `${process.env.API_URL}/uploads/${filename}`;
 };
 
-export const deleteServerFile = async (filename: string): Promise<boolean> => {
+export const deleteServerFile = (filename: string): boolean => {
   const filePath = join(process.cwd(), 'uploads', filename);
 
   try {
-    await fs.promises.unlink(filePath);
+    fs.unlink(filePath, (err) => console.log('file deletion error', err));
     return true;
   } catch (error: any) {
     if (error.code === 'ENOENT') {
