@@ -95,7 +95,7 @@ export class AuthService {
       httpOnly:
         this.configService.get('appConfig.environment') === 'production',
       secure: this.configService.get('appConfig.environment') === 'production', // Use secure cookies in production
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/',
       maxAge:
         Number(this.configService.get('jwt.refreshTokenMaxAge')) *
@@ -120,7 +120,7 @@ export class AuthService {
       httpOnly:
         this.configService.get('appConfig.environment') === 'production',
       secure: this.configService.get('appConfig.environment') === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/',
       expires: new Date(0), // Expire the cookie immediately
     });
