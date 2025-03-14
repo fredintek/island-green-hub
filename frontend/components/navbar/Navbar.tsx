@@ -1,8 +1,12 @@
 "use client";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { toggleNavbar, toggleTheme } from "@/redux/slices/navbar";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
-import { UserOutlined, VerticalRightOutlined } from "@ant-design/icons";
+import {
+  GlobalOutlined,
+  UserOutlined,
+  VerticalRightOutlined,
+} from "@ant-design/icons";
 import { faLightbulb, faMoon } from "@fortawesome/free-regular-svg-icons";
 import {
   faBars,
@@ -10,7 +14,8 @@ import {
   faX,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Avatar, ConfigProvider, Input } from "antd";
+import { Avatar, ConfigProvider, Dropdown, Input, MenuProps } from "antd";
+import { useSearchParams, usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 type Props = {};
@@ -21,6 +26,73 @@ const Navbar = (props: Props) => {
   const [isNavbarOpen, setIsNavbarOpen] = useState<boolean>(false);
   const { isNavCollapsed, isDark } = useAppSelector((state) => state.sidebar);
   const [searchValue, setSearchValue] = useState("");
+  const nextPath = usePathname();
+  const searchParams = useSearchParams();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
+  const router = useRouter();
+
+  const queryParams = searchParams
+    ? Object.fromEntries(searchParams.entries())
+    : {};
+
+  const changeLocale = (newLocale: "en" | "tr" | "ru") => {
+    const targetPathname = nextPath.replace(/^\/(en|tr|ru)/, "");
+    router.replace(
+      { pathname: targetPathname, query: queryParams },
+      { locale: newLocale }
+    );
+  };
+
+  const languageItems: MenuProps["items"] = [
+    {
+      key: "278362",
+      label: (
+        <div
+          onClick={() => changeLocale("tr")}
+          className="flex items-center gap-1"
+        >
+          <img
+            className="inline-block w-7 h-7 object-cover"
+            src="/images/tr-flag.png"
+            alt=""
+          />
+          <span>tr</span>
+        </div>
+      ),
+    },
+    {
+      key: "232348",
+      label: (
+        <div
+          onClick={() => changeLocale("en")}
+          className="flex items-center gap-1"
+        >
+          <img
+            className="inline-block w-7 h-7 object-cover"
+            src="/images/gb-flag.png"
+            alt=""
+          />
+          <span>en</span>
+        </div>
+      ),
+    },
+    {
+      key: "22435",
+      label: (
+        <div
+          onClick={() => changeLocale("ru")}
+          className="flex items-center gap-1"
+        >
+          <img
+            className="inline-block w-7 h-7 object-cover"
+            src="/images/ru-flag.png"
+            alt=""
+          />
+          <span>ru</span>
+        </div>
+      ),
+    },
+  ];
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width:768px)");
@@ -119,7 +191,20 @@ const Navbar = (props: Props) => {
           </div>
         </div>
         {/* right */}
-        <div className="flex gap-6 items-center">
+        <div className="flex gap-3 items-center">
+          {/* language switcher */}
+          <Dropdown
+            // overlayClassName="custom-dropdown"
+            menu={{ items: languageItems }}
+            trigger={["hover"]}
+            autoAdjustOverflow={true}
+          >
+            <div className="cursor-pointer flex items-center gap-1 text-black dark:text-gray-400">
+              <p className="uppercase text-[10px] font-medium">{locale}</p>
+              <GlobalOutlined className="text-xl" />
+            </div>
+          </Dropdown>
+
           {/* light and dark theme */}
           <div
             onClick={() => dispatch(toggleTheme(undefined))}
@@ -140,13 +225,14 @@ const Navbar = (props: Props) => {
               <FontAwesomeIcon icon={faMoon} className="text-white" />
             </div>
           </div>
+
           {/* profile picture */}
           <div className="flex flex-col gap-1 items-center">
             <Avatar
               icon={<UserOutlined className="text-black h-4" />}
               className="hidden md:flex cursor-pointer group w-[40px] h-[40px] bg-[#F8F8F8] border border-red-500"
             />
-            <p className="text-sm italic text-gray-400">
+            <p className="hidden md:block text-sm italic text-gray-400">
               {currentReduxUser?.email}
             </p>
           </div>
