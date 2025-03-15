@@ -1,7 +1,8 @@
 "use client";
-import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
+import {
+  ensureArray,
+  validateArray,
+} from "@/app/[locale]/dashboard/projects/add-project/page";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { useUpdateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
 import {
@@ -33,8 +34,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   );
   const [record, setRecord] = useState<any>(null);
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
-
-  const [projectHomeImageList, setProjectHomeImageList] = useState<any>([]);
   const [projectHouseGallery, setProjectHouseGallery] = useState<any>([]);
   const [projectHouseCoverImageFileList, setProjectHouseCoverImageFileList] =
     useState<any>([]);
@@ -43,27 +42,11 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     setProjectHouseDisplayImageFileList,
   ] = useState<any>([]);
 
-  const [isCoverImageUploadToCloud, setIsCoverImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isDisplayImageUploadToCloud, setIsDisplayImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isHomeImageUploadToCloud, setIsHomeImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isGalleryImageUploadToCloud, setIsGalleryImageUploadToCloud] =
-    useState<boolean>(false);
-
   const { data: getPageBySlugData } = useGetPageBySlugQuery(params.slug, {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
   });
-
-  // console.log("getPageBySlugData", getPageBySlugData);
-
-  const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
 
   const [
     updateProjectHouseFn,
@@ -81,11 +64,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
   const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
     useDeleteFileMutation();
-
-  const handleUploadChangeHomeImage = ({ fileList }: any) => {
-    setProjectHomeImageList(fileList);
-    form.setFieldsValue({ projectHomeImage: fileList });
-  };
 
   const handleUploadChangeProjectHouseCoverImage = ({ fileList }: any) => {
     setProjectHouseCoverImageFileList(fileList);
@@ -173,37 +151,12 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         );
       }
 
-      // project home gallery
-      let homeGalleryFormData = new FormData();
-      let homeGalleryImages: string[] = [];
-      for (const value of values.projectHomeImage) {
-        const arr = prepareUpload(
-          value,
-          homeGalleryFormData,
-          "projectHomeImage"
-        );
-
-        if (arr) {
-          homeGalleryImages.push(arr);
-        }
-      }
-      const isHomeGalleryFormDataEmpty = homeGalleryFormData
-        .entries()
-        .next().done;
-      if (!isHomeGalleryFormDataEmpty) {
-        const arr = await uploadFileFn(homeGalleryFormData).unwrap();
-        ensureArray(arr.projectHomeImage)?.forEach((img: string) =>
-          homeGalleryImages.push(img)
-        );
-      }
-
       // DATA
       const targetData = {
         id: record?.id,
         coverImage: projectHouseCoverImage,
         displayImage: projectHouseDisplayImage,
-        gallery: galleryImages,
-        homeImages: homeGalleryImages,
+        gallery: validateArray(ensureArray(galleryImages)),
         title: {
           en: values.projectHouseTitleEn,
           tr: values.projectHouseTitleTr,
@@ -223,11 +176,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
           en: values.optionalProjectFeaturesEn || "",
           tr: values.optionalProjectFeaturesTr || "",
           ru: values.optionalProjectFeaturesRu || "",
-        },
-        homeText: {
-          en: values.projectHomeContentEn,
-          tr: values.projectHomeContentTr,
-          ru: values.projectHomeContentRu,
         },
       };
 
@@ -281,14 +229,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
             },
           ]
         : [];
-      const homeImages = record.homeImages
-        ? record?.homeImages?.map((img: any) => ({
-            url: img,
-            uid: img,
-            name: "image",
-            status: "done",
-          }))
-        : [];
       const gallery = record.gallery
         ? record?.gallery?.map((img: any) => ({
             url: img,
@@ -311,11 +251,7 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         optionalProjectFeaturesTr: record.optionalFeatures?.tr,
         optionalProjectFeaturesEn: record.optionalFeatures?.en,
         optionalProjectFeaturesRu: record.optionalFeatures?.ru,
-        projectHomeContentTr: record.homeText?.tr,
-        projectHomeContentEn: record.homeText?.en,
-        projectHomeContentRu: record.homeText?.ru,
         projectHouseGallery: gallery,
-        projectHomeImage: homeImages,
         projectHouseDisplayImage: displayImage,
         projectHouseCoverImage: coverImage,
       });
@@ -323,8 +259,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       setProjectHouseCoverImageFileList(coverImage);
 
       setProjectHouseDisplayImageFileList(displayImage);
-
-      setProjectHomeImageList(homeImages);
 
       setProjectHouseGallery(gallery);
     }
@@ -489,82 +423,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
               >
                 <PlusOutlined />
               </Upload>
-            </Form.Item>
-
-            {/* project home images */}
-            <Form.Item
-              label="Upload Project Home Images (2)"
-              name="projectHomeImage"
-              valuePropName="fileList"
-              getValueFromEvent={(e) => e?.fileList}
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Image is required!",
-                },
-              ]}
-            >
-              <Upload
-                name="file"
-                multiple={true}
-                beforeUpload={() => false}
-                listType="picture-card"
-                accept="image/*"
-                fileList={projectHomeImageList}
-                onChange={handleUploadChangeHomeImage}
-                maxCount={2}
-              >
-                <PlusOutlined />
-              </Upload>
-            </Form.Item>
-          </div>
-
-          {/* project home content */}
-          <div className="grid grid-cols-fluid-1 gap-4">
-            <Form.Item
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Content is required!",
-                },
-              ]}
-              label="Project Home Content(Turkish)"
-              name="projectHomeContentTr"
-            >
-              <ReactQuill
-                theme="snow"
-                placeholder="Enter project home content in Turkish"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Project Home Content(English)"
-              name="projectHomeContentEn"
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Content is required!",
-                },
-              ]}
-            >
-              <ReactQuill
-                theme="snow"
-                placeholder="Enter project home content in English"
-              />
-            </Form.Item>
-            <Form.Item
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Content is required!",
-                },
-              ]}
-              label="Project Home Content(Russian)"
-              name="projectHomeContentRu"
-            >
-              <ReactQuill
-                theme="snow"
-                placeholder="Enter project home content in Russian"
-              />
             </Form.Item>
           </div>
 

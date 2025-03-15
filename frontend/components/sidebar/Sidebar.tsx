@@ -63,11 +63,14 @@ const Sidebar = (props: Props) => {
 
   const locale = nextPathname.split("/")[1] as "en" | "tr" | "ru";
 
-  const { data: getAllPagesData } = useGetAllPagesQuery(undefined, {
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMountOrArgChange: true,
-  });
+  const { data: getAllPagesData } = useGetAllPagesQuery(
+    { onlyParent: true },
+    {
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   const mapPagesToMenuItems = (pages: Page[]): MenuItem[] => {
     return pages?.map((page) => {

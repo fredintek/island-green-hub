@@ -1,18 +1,16 @@
 "use client";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
-import {
-  useCreateBulkProjectPageMutation,
-  useGetPageBySlugQuery,
-} from "@/redux/api/pageApiSlice";
+import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
+import { useCreateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
 import {
   useDeleteFileMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { useAppSelector } from "@/redux/store";
-import { DeleteOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Upload } from "antd";
+import { InboxOutlined, PlusOutlined } from "@ant-design/icons";
+import { Form, Input, Select, Upload } from "antd";
 import Dragger from "antd/es/upload/Dragger";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -39,10 +37,9 @@ const page = (props: Props) => {
     () => dynamic(() => import("react-quill-new"), { ssr: false }),
     []
   );
-  const [projectFileList, setProjectFileList] = useState<any>([]);
-  const [projectPdfList, setProjectPdfList] = useState<any>([]);
+  const nextPath = usePathname();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
   const currentReduxUser = useAppSelector((state) => state.auth.user);
-  const [projectHomeImageList, setProjectHomeImageList] = useState<any>([]);
   const [projectHouseGallery, setProjectHouseGallery] = useState<any>([]);
   const [projectHouseCoverImageFileList, setProjectHouseCoverImageFileList] =
     useState<any>([]);
@@ -50,11 +47,9 @@ const page = (props: Props) => {
     projectHouseDisplayImageFileList,
     setProjectHouseDisplayImageFileList,
   ] = useState<any>([]);
-  const [stage2Images, setStage2Images] = useState<any>([]);
-  const [videoLinks, setVideoLinks] = useState<string[]>([""]);
   const [form] = Form.useForm();
 
-  const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
+  const { data: getProjects, refetch: getAllPageBySlugRefetch } =
     useGetPageBySlugQuery("projects", {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,
@@ -62,15 +57,15 @@ const page = (props: Props) => {
     });
 
   const [
-    createBulkProjectFn,
+    createProjectHouseFn,
     {
-      isError: createBulkProjectIsError,
-      isLoading: createBulkProjectIsLoading,
-      isSuccess: createBulkProjectIsSuccess,
-      error: createBulkProjectError,
-      data: createBulkProjectData,
+      isError: createProjectHouseIsError,
+      isLoading: createProjectHouseIsLoading,
+      isSuccess: createProjectHouseIsSuccess,
+      error: createProjectHouseError,
+      data: createProjectHouseData,
     },
-  ] = useCreateBulkProjectPageMutation();
+  ] = useCreateProjectHouseMutation();
 
   const [
     uploadFileFn,
@@ -83,21 +78,6 @@ const page = (props: Props) => {
     },
   ] = useUploadFileMutation();
 
-  const handleUploadChange = ({ fileList }: any) => {
-    setProjectFileList(fileList);
-    form.setFieldsValue({ projectImages: fileList });
-  };
-
-  const handleUploadChangePdf = ({ fileList }: any) => {
-    setProjectPdfList(fileList);
-    form.setFieldsValue({ projectPdf: fileList });
-  };
-
-  const handleUploadChangeHomeImage = ({ fileList }: any) => {
-    setProjectHomeImageList(fileList);
-    form.setFieldsValue({ projectHomeImage: fileList });
-  };
-
   const handleUploadChangeProjectHouseCoverImage = ({ fileList }: any) => {
     setProjectHouseCoverImageFileList(fileList);
     form.setFieldsValue({ projectHouseCoverImage: fileList });
@@ -108,26 +88,6 @@ const page = (props: Props) => {
     form.setFieldsValue({ projectHouseDisplayImage: fileList });
   };
 
-  // Handle adding a new video input field
-  const addVideoField = () => {
-    setVideoLinks([...videoLinks, ""]);
-  };
-
-  // Handle removing a video input field
-  const removeVideoField = (index: number) => {
-    const updatedLinks = videoLinks.filter((_, i) => i !== index);
-    setVideoLinks(updatedLinks);
-    form.setFieldsValue({ youtubeVideos: updatedLinks });
-  };
-
-  // Handle change in video inputs
-  const handleVideoChange = (index: number, value: string) => {
-    const updatedLinks = [...videoLinks];
-    updatedLinks[index] = value;
-    setVideoLinks(updatedLinks);
-    form.setFieldsValue({ youtubeVideos: updatedLinks });
-  };
-
   const handleSubmit = async (values: any) => {
     if (currentReduxUser?.role !== "admin") {
       toast.error("You cannot perform this action");
@@ -135,8 +95,8 @@ const page = (props: Props) => {
     }
     /**
      * properties to upload
-     * projectImage*, projectPdf*, [projectHomeImage]*, projectHouseCoverImage*
-     * projectHouseDisplayImage*, [projectHouseGallery], [stage2Images]
+     * projectHouseCoverImage*
+     * projectHouseDisplayImage*, [projectHouseGallery]
      */
     try {
       let formData = new FormData();
@@ -152,14 +112,10 @@ const page = (props: Props) => {
       };
 
       addFilesWithTags(values?.projectHouseGallery, "projectHouseGallery");
-      addFilesWithTags(values?.stage2Images, "stage2Images");
-      addFilesWithTags(values?.projectHomeImage, "projectHomeImage");
       addFilesWithTags(
         values?.projectHouseCoverImage,
         "projectHouseCoverImage"
       );
-      addFilesWithTags(values?.projectImages, "projectImages");
-      addFilesWithTags(values?.projectPdf, "projectPdf");
       addFilesWithTags(
         values?.projectHouseDisplayImage,
         "projectHouseDisplayImage"
@@ -174,65 +130,38 @@ const page = (props: Props) => {
       const uploadedFiles = await uploadFileFn(formData).unwrap();
 
       const data = {
-        parentPageId: getAllPageBySlugData?.id,
-        projectTitle: {
-          en: values?.projectTitleEn,
-          ru: values?.projectTitleRu,
-          tr: values?.projectTitleTr,
-        },
-        projectImage: uploadedFiles["projectImages"],
-        projectPdf: uploadedFiles["projectPdf"],
-        productLink: values.productLink,
-        projectContent: {
-          en: values.projectContentEn,
-          ru: values.projectContentRu,
-          tr: values.projectContentTr,
-        },
-        projectHouseTitle: {
+        projectPage: values?.projectPage,
+        title: {
           en: values.projectHouseTitleEn,
           ru: values.projectHouseTitleRu,
           tr: values.projectHouseTitleTr,
         },
-        projectHomeImage: validateArray(
-          ensureArray(uploadedFiles["projectHomeImage"])
-        ),
-        projectHouseCoverImage: uploadedFiles["projectHouseCoverImage"],
-        projectHouseDisplayImage: uploadedFiles["projectHouseDisplayImage"],
-        projectHomeContent: {
-          en: values.projectHomeContentEn,
-          ru: values.projectHomeContentRu,
-          tr: values.projectHomeContentTr,
-        },
-        projectGeneralInfo: {
+        coverImage: uploadedFiles["projectHouseCoverImage"],
+        displayImage: uploadedFiles["projectHouseDisplayImage"],
+        generalInfo: {
           en: values.projectGeneralInfoEn,
           ru: values.projectGeneralInfoRu,
           tr: values.projectGeneralInfoTr,
         },
-        projectFeatures: {
+        features: {
           en: values.projectFeaturesEn,
           ru: values.projectFeaturesRu,
           tr: values.projectFeaturesTr,
         },
-        optionalProjectFeatures: {
+        optionalFeatures: {
           en: values.optionalProjectFeaturesEn,
           ru: values.optionalProjectFeaturesRu,
           tr: values.optionalProjectFeaturesTr,
         },
-        projectHouseGallery: validateArray(
+        gallery: validateArray(
           ensureArray(uploadedFiles["projectHouseGallery"])
         ),
-        stage2Images: validateArray(ensureArray(uploadedFiles["stage2Images"])),
-        projectLocation: values.projectLocation,
-        youtubeVideos: validateArray(values.youtubeVideos),
       };
-      await createBulkProjectFn(data).unwrap();
+      await createProjectHouseFn(data).unwrap();
       form.resetFields();
-      setProjectFileList([]);
-      setProjectPdfList([]);
-      setProjectHomeImageList([]);
       setProjectHouseGallery([]);
-      setStage2Images([]);
-      setVideoLinks(["", ""]);
+      setProjectHouseCoverImageFileList([]);
+      setProjectHouseDisplayImageFileList([]);
 
       //   console.log("DATA TO SUBMIT", data);
     } catch (error) {
@@ -242,17 +171,17 @@ const page = (props: Props) => {
   };
 
   useEffect(() => {
-    if (createBulkProjectIsSuccess) {
+    if (createProjectHouseIsSuccess) {
       toast.success("Page created successfully");
       getAllPageBySlugRefetch();
     }
 
-    if (createBulkProjectIsError) {
-      const customErrorV1 = createBulkProjectError as {
+    if (createProjectHouseIsError) {
+      const customErrorV1 = createProjectHouseError as {
         data: any;
         status: number;
       };
-      const customErrorV2 = createBulkProjectError as {
+      const customErrorV2 = createProjectHouseError as {
         message: string | string[];
         error: string;
         statusCode: number;
@@ -260,10 +189,10 @@ const page = (props: Props) => {
       toast.error(customErrorV1.data.message || customErrorV2.message);
     }
   }, [
-    createBulkProjectIsSuccess,
-    createBulkProjectIsError,
-    createBulkProjectError,
-    createBulkProjectData,
+    createProjectHouseIsSuccess,
+    createProjectHouseIsError,
+    createProjectHouseError,
+    createProjectHouseData,
   ]);
 
   useEffect(() => {
@@ -281,169 +210,34 @@ const page = (props: Props) => {
     <section className="flex flex-col gap-10">
       <div className="p-6 bg-white dark:bg-[#1e293b] shadow-md rounded-md">
         <p className="text-[22px] text-secondaryShade dark:text-primaryShade font-bold uppercase mb-6">
-          Add Project
+          Add Project House
         </p>
 
         <Form onFinish={handleSubmit} layout="vertical" form={form}>
-          {/* PROJECT TITLE */}
-          <div className="grid grid-cols-fluid-1 gap-4">
-            <Form.Item
-              label="Project Title (Turkish)"
-              name="projectTitleTr"
-              rules={[
-                { required: true, message: "Project Title is required!" },
-              ]}
-            >
-              <Input
-                size="large"
-                placeholder="Enter Project Title in Turkish"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Project Title (English)"
-              name="projectTitleEn"
-              rules={[
-                { required: true, message: "Project Title is required!" },
-              ]}
-            >
-              <Input
-                size="large"
-                placeholder="Enter Project Title in English"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Project Title (Russian)"
-              name="projectTitleRu"
-              rules={[
-                { required: true, message: "Project Title is required!" },
-              ]}
-            >
-              <Input
-                size="large"
-                placeholder="Enter Project Title in Russian"
-              />
-            </Form.Item>
-          </div>
-
-          {/* PROJECT CONTENT */}
-          <div>
-            <p className="text-base text-secondaryShade dark:text-primaryShade font-bold uppercase mb-6">
-              Project Content
-            </p>
-
-            <div className="flex flex-col gap-10">
-              <div className="flex gap-10">
-                <Form.Item
-                  label="Upload Project Image"
-                  name="projectImages"
-                  valuePropName="fileList"
-                  getValueFromEvent={(e) => e?.fileList}
-                  rules={[
-                    {
-                      required: true,
-                      message: "You must upload an image!",
-                    },
-                  ]}
-                >
-                  <Upload
-                    name="file"
-                    multiple={false}
-                    beforeUpload={() => false}
-                    listType="picture-card"
-                    accept="image/*"
-                    fileList={projectFileList}
-                    onChange={handleUploadChange}
-                  >
-                    <PlusOutlined />
-                  </Upload>
-                </Form.Item>
-
-                <Form.Item
-                  label="Upload Project PDF"
-                  name="projectPdf"
-                  valuePropName="fileList"
-                  getValueFromEvent={(e) => e?.fileList}
-                  rules={[
-                    {
-                      required: true,
-                      message: "Project PDF is required!",
-                    },
-                  ]}
-                >
-                  <Upload
-                    name="file"
-                    multiple={false}
-                    beforeUpload={() => false}
-                    listType="picture-card"
-                    accept="application/pdf"
-                    fileList={projectPdfList}
-                    onChange={handleUploadChangePdf}
-                  >
-                    <PlusOutlined />
-                  </Upload>
-                </Form.Item>
-              </div>
-
-              {/* PRODUCT LINK */}
-              <Form.Item
-                rules={[
-                  { required: true, message: "Product Link is required!" },
-                ]}
-                label="Product Link"
-                name="productLink"
-              >
-                <Input
-                  size="large"
-                  placeholder="Enter Project Title in Turkish"
-                />
-              </Form.Item>
-            </div>
-
-            <div className="grid grid-cols-fluid-1 gap-4">
-              <Form.Item
-                rules={[
-                  { required: true, message: "Project Content is required!" },
-                ]}
-                label="Project Content(Turkish)"
-                name="projectContentTr"
-              >
-                <ReactQuill
-                  theme="snow"
-                  placeholder="Enter project content in Turkish"
-                />
-              </Form.Item>
-              <Form.Item
-                label="Project Content(English)"
-                name="projectContentEn"
-                rules={[
-                  { required: true, message: "Project Content is required!" },
-                ]}
-              >
-                <ReactQuill
-                  theme="snow"
-                  placeholder="Enter project content in English"
-                />
-              </Form.Item>
-              <Form.Item
-                rules={[
-                  { required: true, message: "Project Content is required!" },
-                ]}
-                label="Project Content(Russian)"
-                name="projectContentRu"
-              >
-                <ReactQuill
-                  theme="snow"
-                  placeholder="Enter project content in Russian"
-                />
-              </Form.Item>
-            </div>
-          </div>
-
           {/* PROJECT HOUSE */}
           <div>
-            <p className="text-base text-secondaryShade dark:text-primaryShade font-bold uppercase mb-6">
-              Project Houses
-            </p>
+            {/* project house titles */}
+            <div className="grid grid-cols-fluid-1 gap-4">
+              <Form.Item
+                label="Project Page"
+                name="projectPage"
+                rules={[
+                  {
+                    required: true,
+                    message: "Project Page is required!",
+                  },
+                ]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Enter Project Page"
+                  options={getProjects?.subPages?.map((page: any) => ({
+                    label: page.title[locale],
+                    value: page?.id,
+                  }))}
+                />
+              </Form.Item>
+            </div>
 
             {/* project house titles */}
             <div className="grid grid-cols-fluid-1 gap-4">
@@ -546,82 +340,6 @@ const page = (props: Props) => {
                 >
                   <PlusOutlined />
                 </Upload>
-              </Form.Item>
-
-              {/* project home images */}
-              <Form.Item
-                label="Upload Project Home Images (2)"
-                name="projectHomeImage"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => e?.fileList}
-                rules={[
-                  {
-                    required: true,
-                    message: "Project Home Image is required!",
-                  },
-                ]}
-              >
-                <Upload
-                  name="file"
-                  multiple={true}
-                  beforeUpload={() => false}
-                  listType="picture-card"
-                  accept="image/*"
-                  fileList={projectHomeImageList}
-                  onChange={handleUploadChangeHomeImage}
-                  maxCount={2}
-                >
-                  <PlusOutlined />
-                </Upload>
-              </Form.Item>
-            </div>
-
-            {/* project home content */}
-            <div className="grid grid-cols-fluid-1 gap-4">
-              <Form.Item
-                rules={[
-                  {
-                    required: true,
-                    message: "Project Home Content is required!",
-                  },
-                ]}
-                label="Project Home Content(Turkish)"
-                name="projectHomeContentTr"
-              >
-                <ReactQuill
-                  theme="snow"
-                  placeholder="Enter project home content in Turkish"
-                />
-              </Form.Item>
-              <Form.Item
-                label="Project Home Content(English)"
-                name="projectHomeContentEn"
-                rules={[
-                  {
-                    required: true,
-                    message: "Project Home Content is required!",
-                  },
-                ]}
-              >
-                <ReactQuill
-                  theme="snow"
-                  placeholder="Enter project home content in English"
-                />
-              </Form.Item>
-              <Form.Item
-                rules={[
-                  {
-                    required: true,
-                    message: "Project Home Content is required!",
-                  },
-                ]}
-                label="Project Home Content(Russian)"
-                name="projectHomeContentRu"
-              >
-                <ReactQuill
-                  theme="snow"
-                  placeholder="Enter project home content in Russian"
-                />
               </Form.Item>
             </div>
 
@@ -789,97 +507,14 @@ const page = (props: Props) => {
             </div>
           </div>
 
-          {/* OPTIONAL SECTIONS */}
-          <div className="flex flex-col gap-4 mt-4">
-            <p className="text-base text-secondaryShade dark:text-primaryShade font-bold uppercase mt-2">
-              Optional Sections
-            </p>
-            {/* stage 2 */}
-            <div>
-              <p className="text-sm text-black dark:text-gray-300 capitalize mb-2">
-                Upload stage 2 images
-              </p>
-              <div className="border-2 border-secondaryShade dark:border-primaryShade border-dashed rounded-xl w-full">
-                <Form.Item
-                  name="stage2Images"
-                  valuePropName="fileList"
-                  getValueFromEvent={(e) => e?.fileList}
-                >
-                  <Dragger
-                    name="file"
-                    multiple={true}
-                    beforeUpload={(file) => false}
-                    onChange={(info) => {
-                      setStage2Images(info.fileList);
-                    }}
-                    listType="picture-card"
-                    accept="image/*"
-                    className=""
-                    fileList={stage2Images}
-                  >
-                    <p className="ant-upload-drag-icon">
-                      <InboxOutlined className="!text-secondaryShade dark:!text-primaryShade" />
-                    </p>
-                    <p className="ant-upload-text !text-black dark:!text-gray-300">
-                      Click or drag file to this area to upload
-                    </p>
-                  </Dragger>
-                </Form.Item>
-              </div>
-            </div>
-
-            {/* location */}
-            <Form.Item label="Project Location" name="projectLocation">
-              <Input
-                size="large"
-                placeholder="Enter project location from google maps"
-              />
-            </Form.Item>
-
-            {/* youtube videos */}
-            <div className="">
-              <p className="mb-2">YouTube Videos</p>
-              {videoLinks.map((link, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
-                  <Form.Item
-                    name={["youtubeVideos", index]}
-                    className="flex-grow"
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Enter YouTube video link"
-                      value={link}
-                      onChange={(e) => handleVideoChange(index, e.target.value)}
-                    />
-                  </Form.Item>
-                  {index > 0 && (
-                    <Button
-                      type="default"
-                      danger
-                      icon={<DeleteOutlined />}
-                      onClick={() => removeVideoField(index)}
-                    />
-                  )}
-                </div>
-              ))}
-              <Button
-                type="dashed"
-                icon={<PlusOutlined />}
-                onClick={addVideoField}
-              >
-                Add Video Link
-              </Button>
-            </div>
-          </div>
-
           {/* Submit Button */}
           <button
             onClick={() => form.submit()}
             type="button"
-            disabled={createBulkProjectIsLoading || uploadFileIsLoading}
+            disabled={createProjectHouseIsLoading || uploadFileIsLoading}
             className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
           >
-            {createBulkProjectIsLoading || uploadFileIsLoading ? (
+            {createProjectHouseIsLoading || uploadFileIsLoading ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (
               <p className="uppercase font-medium">Submit</p>

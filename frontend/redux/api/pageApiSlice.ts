@@ -5,7 +5,9 @@ export const pageApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Get All Pages
     getAllPages: builder.query({
-      query: () => "/page",
+      query: (query: { isProjectHomePage?: boolean; onlyParent?: boolean }) => {
+        return `/page/?isProjectHomePage=${query.isProjectHomePage}&onlyParent=${query.onlyParent}`;
+      },
     }),
     // Get Page by ID
     getPageById: builder.query({
@@ -109,4 +111,5 @@ export const {
   useUpdateBulk360PageMutation,
   useCreateBulkAboutPageMutation,
   useUpdateBulkAboutPageMutation,
+  useLazyGetAllPagesQuery,
 } = pageApiSlice;

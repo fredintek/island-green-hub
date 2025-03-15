@@ -15,18 +15,6 @@ type Props = {
 const ProductLink = ({ pageData, refetchEditedData }: Props) => {
   const [form] = Form.useForm();
 
-  const {
-    data: getSectionByTypeData,
-    isLoading: getSectionByTypeIsLoading,
-    isError: getSectionByTypeIsError,
-    isSuccess: getSectionByTypeIsSuccess,
-    error: getSectionByTypeError,
-  } = useGetSectionByTypeQuery("productLink", {
-    refetchOnMountOrArgChange: true,
-    refetchOnReconnect: true,
-    refetchOnFocus: true,
-  });
-
   const [
     updateSectionFn,
     {

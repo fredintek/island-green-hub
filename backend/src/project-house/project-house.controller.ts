@@ -48,11 +48,8 @@ export class ProjectHouseController {
 
   @Get()
   @Auth(AuthType.None)
-  getAllProjectHouses(
-    @Query('isHomePage', new ParseBoolPipe({ optional: true }))
-    isHomePage?: boolean,
-  ) {
-    return this.projectHouseService.getAllProjectHouses(isHomePage);
+  getAllProjectHouses() {
+    return this.projectHouseService.getAllProjectHouses();
   }
 
   @Get(':projectHouseId')

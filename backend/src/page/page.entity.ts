@@ -31,6 +31,29 @@ export class Page {
   @Column({ type: 'varchar', length: 255 })
   slug: string;
 
+  @Column({
+    type: 'json',
+    nullable: true,
+  })
+  projectHomeText: {
+    en: string;
+    ru: string;
+    tr: string;
+  };
+
+  @Column({
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  isProjectHomePage: boolean;
+
+  @Column({
+    type: 'json',
+    nullable: true,
+  })
+  projectHomeImages: string[];
+
   @ManyToOne(() => Page, (parentPage) => parentPage.subPages, {
     nullable: true,
     onDelete: 'CASCADE',

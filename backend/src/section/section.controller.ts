@@ -47,7 +47,7 @@ export class SectionController {
    */
   @Post('upload-file')
   @UseInterceptors(
-    FilesInterceptor('files', 20, {
+    FilesInterceptor('files', 500, {
       storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
         if (
@@ -64,7 +64,7 @@ export class SectionController {
         }
       },
       limits: {
-        fileSize: 1024 * 1024 * 10, // 10MB
+        fileSize: 1024 * 1024 * 100, // 10MB
       },
     }),
   )

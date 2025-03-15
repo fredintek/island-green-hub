@@ -82,16 +82,13 @@ export class ProjectHouseService {
     }
 
     await this.projectHouse.remove(projectHouse);
-
     return {
       message: 'Project house deleted successfully',
     };
   }
 
-  public async getAllProjectHouses(isHomePage?: boolean) {
-    const whereCondition = isHomePage !== undefined ? { isHomePage } : {};
+  public async getAllProjectHouses() {
     const projectHouses = await this.projectHouse.find({
-      where: whereCondition,
       relations: ['projectPage'],
     });
     return projectHouses;
@@ -116,21 +113,21 @@ export class ProjectHouseService {
   }
 
   public async updateIsHomePage(isHomePageDto: IsHomePageDto) {
-    const projectHouse = await this.projectHouse.findOne({
-      where: { id: isHomePageDto.projectHouseId },
+    const targetPage = await this.pageRepository.findOne({
+      where: { id: isHomePageDto.pageId },
     });
 
-    if (!projectHouse) {
+    if (!targetPage) {
       throw new NotFoundException(
-        `Project house with id ${isHomePageDto.projectHouseId} not found.`,
+        `Page with id ${isHomePageDto.pageId} not found.`,
       );
     }
 
-    projectHouse.isHomePage = isHomePageDto.isHomePage;
+    targetPage.isProjectHomePage = isHomePageDto.isHomePage;
 
-    await this.projectHouse.save(projectHouse);
+    await this.pageRepository.save(targetPage);
     return {
-      message: 'Project updated successfully',
+      message: 'Page updated successfully',
     };
   }
 }

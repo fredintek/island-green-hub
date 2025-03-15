@@ -10,14 +10,15 @@ import { Page } from "@/utils/interfaces";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table } from "antd";
 import { ColumnsType } from "antd/es/table";
-import { useLocale } from "next-intl";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 type Props = {};
 
 const page = (props: Props) => {
-  const locale = useLocale();
+  const nextPath = usePathname();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
   const [form] = Form.useForm();
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const [record, setRecord] = useState<any>(null);

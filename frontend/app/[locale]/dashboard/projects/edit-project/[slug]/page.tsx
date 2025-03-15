@@ -1,6 +1,7 @@
 "use client";
 import ProductLink from "@/components/projects/edit-project/ProductLink";
 import ProjectContent from "@/components/projects/edit-project/ProjectContent";
+import ProjectHome from "@/components/projects/edit-project/ProjectHome";
 import ProjectHouse from "@/components/projects/edit-project/ProjectHouse";
 import ProjectLocation from "@/components/projects/edit-project/ProjectLocation";
 import ProjectTitle from "@/components/projects/edit-project/ProjectTitle";
@@ -57,6 +58,18 @@ const page = (props: Props) => {
           </p>
 
           <ProductLink
+            pageData={getAllPageBySlugData}
+            refetchEditedData={getPageBySlugFn}
+          />
+        </div>
+
+        {/* project home */}
+        <div className="flex flex-col p-6 bg-white dark:bg-[#1e293b] shadow-md rounded-md">
+          <p className="text-[18px] text-secondaryShade dark:text-primaryShade font-bold uppercase mb-4">
+            Project Home
+          </p>
+
+          <ProjectHome
             pageData={getAllPageBySlugData}
             refetchEditedData={getPageBySlugFn}
           />

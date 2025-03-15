@@ -26,8 +26,8 @@ const Navbar = (props: Props) => {
   const [isNavbarOpen, setIsNavbarOpen] = useState<boolean>(false);
   const { isNavCollapsed, isDark } = useAppSelector((state) => state.sidebar);
   const [searchValue, setSearchValue] = useState("");
-  const nextPath = usePathname();
   const searchParams = useSearchParams();
+  const nextPath = usePathname();
   const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
   const router = useRouter();
 

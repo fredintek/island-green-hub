@@ -22,9 +22,6 @@ import { AccessTokenGuard } from './auth/guards/access-token/access-token.guard'
 import { RoleGuard } from './auth/guards/role/role.guard';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import cloudinaryConfig from './config/cloudinary.config';
-import { MulterModule } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { join } from 'path';
 
 const ENV = process.env.NODE_ENV;
 

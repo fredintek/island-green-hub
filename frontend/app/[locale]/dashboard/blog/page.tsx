@@ -19,14 +19,13 @@ import {
   useCreateSectionMutation,
   useDeleteFileMutation,
   useLazyGetSectionByPageIdQuery,
-  useRemoveLinkFromSectionContentMutation,
   useUpdateSectionMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { toast } from "react-toastify";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
-import { stripHtml } from "@/utils";
 import { ensureArray } from "../projects/add-project/page";
+import { usePathname } from "next/navigation";
 const { Dragger } = Upload;
 
 type Props = {};
@@ -37,10 +36,10 @@ const page = (props: Props) => {
     () => dynamic(() => import("react-quill-new"), { ssr: false }),
     []
   );
-  const locale = useLocale();
+  const nextPath = usePathname();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
   const [form] = Form.useForm();
   const [openModal, setOpenModal] = useState(false);
-  const [uploadinToCloud, setUploadinToCloud] = useState(false);
   const [blogFileList, setBlogFileList] = useState<any>([]);
   const [editingPage, setEditingPage] = useState<any | null>(null);
   const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
@@ -206,9 +205,9 @@ const page = (props: Props) => {
                 ru: values.blogTitleRu,
               },
               blogContent: {
-                tr: stripHtml(values.blogTitleTr),
-                en: stripHtml(values.blogTitleEn),
-                ru: stripHtml(values.blogTitleRu),
+                tr: values.blogContentTr,
+                en: values.blogContentEn,
+                ru: values.blogContentRu,
               },
               blogImages,
             },
@@ -262,9 +261,9 @@ const page = (props: Props) => {
                 ru: values.blogTitleRu,
               },
               blogContent: {
-                tr: stripHtml(values.blogTitleTr),
-                en: stripHtml(values.blogTitleEn),
-                ru: stripHtml(values.blogTitleRu),
+                tr: values.blogContentTr,
+                en: values.blogContentEn,
+                ru: values.blogContentRu,
               },
               blogImages: await uploadFileFn(formData).unwrap(),
             },

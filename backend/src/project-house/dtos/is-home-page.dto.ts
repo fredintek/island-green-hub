@@ -7,5 +7,5 @@ export class IsHomePageDto {
 
   @IsNotEmpty()
   @IsInt()
-  projectHouseId: number;
+  pageId: number;
 }

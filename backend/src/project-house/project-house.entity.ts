@@ -75,29 +75,6 @@ export class ProjectHouse {
   @Column({ type: 'json', nullable: true })
   gallery: string[];
 
-  @Column({
-    type: 'json',
-    nullable: true,
-  })
-  homeText: {
-    en: string;
-    ru: string;
-    tr: string;
-  };
-
-  @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-  })
-  isHomePage: boolean;
-
-  @Column({
-    type: 'json',
-    nullable: true,
-  })
-  homeImages: string[];
-
   @BeforeInsert()
   @BeforeUpdate()
   generateSlug() {

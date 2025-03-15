@@ -20,6 +20,7 @@ import { Update360PageDto } from '../dtos/update-360-page.dto';
 import { CreateBulkAboutPageDto } from '../dtos/create-about-page.dto';
 import { UpdateBulkAboutPageDto } from '../dtos/update-about-page.dto';
 import { deleteServerFile } from 'src/utils/uploadFileToSystem';
+import { IsHomePageDto } from 'src/project-house/dtos/is-home-page.dto';
 
 @Injectable()
 export class PageService {
@@ -110,6 +111,8 @@ export class PageService {
       const projectPage = queryRunner.manager.create(Page, {
         title: createBulkProjectDto.projectTitle,
         parentPage,
+        projectHomeText: createBulkProjectDto.projectHomeContent,
+        projectHomeImages: createBulkProjectDto.projectHomeImage,
       });
 
       await queryRunner.manager.save(projectPage);
@@ -184,8 +187,6 @@ export class PageService {
         displayImage: createBulkProjectDto.projectHouseDisplayImage,
         generalInfo: createBulkProjectDto.projectGeneralInfo,
         features: createBulkProjectDto.projectFeatures,
-        homeText: createBulkProjectDto.projectHomeContent,
-        homeImages: createBulkProjectDto.projectHomeImage,
         optionalFeatures: createBulkProjectDto.optionalProjectFeatures,
         gallery: createBulkProjectDto.projectHouseGallery,
       });
@@ -501,13 +502,30 @@ export class PageService {
     return page;
   }
 
-  public async fetchAllPages() {
+  public async fetchAllPages(fetchllPagesDto?: {
+    isProjectHomePage?: boolean;
+    onlyParent?: boolean;
+  }) {
+    // Destructure DTO values safely
+    const { isProjectHomePage, onlyParent } = fetchllPagesDto || {};
+
+    // Define where conditions dynamically
+    const whereCondition: any = {};
+
+    if (onlyParent) {
+      whereCondition.parentPage = IsNull();
+    }
+
+    if (isProjectHomePage !== undefined) {
+      whereCondition.isProjectHomePage = isProjectHomePage;
+    }
+
+    // Fetch pages based on conditions
     const pages = await this.pageRepository.find({
       relations: ['subPages', 'sections'],
-      where: {
-        parentPage: IsNull(),
-      },
+      where: whereCondition,
     });
+
     return pages;
   }
 
@@ -547,14 +565,6 @@ export class PageService {
           for (const galleryItem of projectHouse.gallery) {
             if (galleryItem) {
               const target = galleryItem.split('uploads/').pop() || '';
-              await deleteServerFile(target);
-            }
-          }
-        }
-        if (projectHouse.homeImages) {
-          for (const homeImage of projectHouse.homeImages) {
-            if (homeImage) {
-              const target = homeImage.split('uploads/').pop() || '';
               await deleteServerFile(target);
             }
           }
