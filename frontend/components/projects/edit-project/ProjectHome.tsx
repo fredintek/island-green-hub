@@ -6,7 +6,6 @@ import {
 import {
   useDeleteFileMutation,
   useGetSectionByPageIdQuery,
-  useUpdateSectionMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { prepareFileUpload } from "@/utils";

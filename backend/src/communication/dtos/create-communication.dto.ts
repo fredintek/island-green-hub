@@ -1,21 +1,12 @@
-import {
-  IsArray,
-  IsEmail,
-  IsOptional,
-  IsPhoneNumber,
-  IsString,
-} from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class CreateCommunicationDto {
-  @IsArray()
-  @IsPhoneNumber(undefined, { each: true })
-  phoneNumber: string[];
+  @IsString()
+  phoneNumber: string;
 
-  @IsArray()
-  @IsEmail({}, { each: true })
-  email: string[];
+  @IsString()
+  email: string;
 
-  @IsArray()
-  @IsString({ each: true })
-  address: string[];
+  @IsString()
+  address: string;
 }

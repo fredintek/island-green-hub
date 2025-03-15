@@ -3,6 +3,7 @@ import {
   useCreatePageMutation,
   useDeletePageMutation,
   useGetPageBySlugQuery,
+  useLazyGetPageByIdQuery,
   useUpdatePageMutation,
 } from "@/redux/api/pageApiSlice";
 import {
@@ -60,6 +61,8 @@ const page = (props: Props) => {
       data: createPageData,
     },
   ] = useCreatePageMutation();
+
+  const [getPageByIdFn] = useLazyGetPageByIdQuery();
 
   const [updatePageFn, { isLoading: updatePageIsLoading }] =
     useUpdatePageMutation();
@@ -193,7 +196,7 @@ const page = (props: Props) => {
         }).unwrap();
         // update section for target page
         if (updatedPage?.id) {
-          const updatedSection = await updateSectionFn({
+          await updateSectionFn({
             id: editingPage?.sectionId,
             page: updatedPage?.id,
             type: `${values.blogTitleEn}-blogContent`,
@@ -212,16 +215,6 @@ const page = (props: Props) => {
               blogImages,
             },
           }).unwrap();
-
-          if (updatedSection?.content) {
-            // delete old images
-            Promise.all(
-              editingPage?.content?.blogImages?.map(async (img: string) => {
-                const target = img.split("uploads/").pop();
-                await deleteFileFn({ filename: target }).unwrap();
-              })
-            );
-          }
         }
 
         setOpenModal(false);

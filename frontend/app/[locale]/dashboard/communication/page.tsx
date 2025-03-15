@@ -4,8 +4,7 @@ import {
   useGetAllCommunicationQuery,
   useUpdateCommunicationMutation,
 } from "@/redux/api/communicationApiSlice";
-import { stripHtml } from "@/utils";
-import { Form, Input } from "antd";
+import { Form } from "antd";
 import dynamic from "next/dynamic";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
@@ -56,24 +55,19 @@ const page = (props: Props) => {
   ] = useUpdateCommunicationMutation();
 
   const handleFormSubmit = async (values: any) => {
-    const cleanedData = {
-      telephone: stripHtml(values.telephone),
-      email: stripHtml(values.email),
-      location: stripHtml(values.location),
-    };
     try {
       if (isEditing) {
         await updateCommunicationFn({
           id: getAllCommunicationData.data[0]?.id,
-          phoneNumber: cleanedData.telephone.split(","),
-          email: cleanedData.email.split(","),
-          address: cleanedData.location.split(","),
+          phoneNumber: values.telephone,
+          email: values.email,
+          address: values.location,
         }).unwrap();
       } else {
         await createCommunicationFn({
-          phoneNumber: cleanedData.telephone.split(","),
-          email: cleanedData.email.split(","),
-          address: cleanedData.location.split(","),
+          phoneNumber: values.telephone,
+          email: values.email,
+          address: values.location,
         }).unwrap();
       }
     } catch (error) {
@@ -85,9 +79,9 @@ const page = (props: Props) => {
     if (getAllCommunicationData?.data?.length > 0) {
       setIsEditing(true);
       form.setFieldsValue({
-        telephone: getAllCommunicationData.data[0].phoneNumber?.join(","),
-        email: getAllCommunicationData.data[0].email?.join(","),
-        location: getAllCommunicationData.data[0].address?.join(","),
+        telephone: getAllCommunicationData?.data[0]?.phoneNumber,
+        email: getAllCommunicationData?.data[0]?.email,
+        location: getAllCommunicationData?.data[0]?.address,
       });
     } else {
       setIsEditing(false);
