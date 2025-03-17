@@ -224,10 +224,20 @@ export class SectionService {
   /**
    * Get Single Section By Type
    */
-  public async getSingleSectionByType(sectionType: string) {
+  public async getSingleSectionByType(
+    sectionType: string,
+    pageId: number | null,
+  ) {
+    const whereCondition: any = {
+      type: Like(`%${sectionType}%`),
+    };
+
+    if (pageId !== null) {
+      whereCondition.page = { id: pageId };
+    }
     // find section with the provided id
     const section = await this.sectionRepository.findOne({
-      where: { type: Like(`%${sectionType}%`) },
+      where: whereCondition,
       relations: ['page'],
     });
 
@@ -238,9 +248,6 @@ export class SectionService {
     }
 
     // return the found section
-    return {
-      message: 'Section retrieved successfully',
-      data: section,
-    };
+    return section;
   }
 }

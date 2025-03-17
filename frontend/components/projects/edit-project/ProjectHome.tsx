@@ -110,15 +110,15 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
         },
       };
       await updatePageFn(targetData).unwrap();
-      if (targetPage?.projectHomeImages) {
-        // delete old images
-        Promise.all(
-          targetPage?.projectHomeImages?.map(async (img: string) => {
-            const target = img.split("uploads/").pop();
-            await deleteFileFn({ filename: target }).unwrap();
-          })
-        );
-      }
+      // if (targetPage?.projectHomeImages) {
+      //   // delete old images
+      //   Promise.all(
+      //     targetPage?.projectHomeImages?.map(async (img: string) => {
+      //       const target = img.split("uploads/").pop();
+      //       await deleteFileFn({ filename: target }).unwrap();
+      //     })
+      //   );
+      // }
     } catch (error) {
       console.error("Error uploading files:", error);
     }

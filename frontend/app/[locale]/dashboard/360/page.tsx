@@ -13,6 +13,7 @@ import { ColumnsType } from "antd/es/table";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import slugify from "slugify";
 
 type Props = {};
 
@@ -88,7 +89,7 @@ const page = (props: Props) => {
       if (record) {
         const targetData = {
           id: record?.id,
-          sectionType: `${record?.slug}-360`,
+          sectionType: `360-${slugify(record?.title?.en)}`,
           title: {
             tr: values.pageTitleTr,
             en: values.pageTitleEn,
@@ -153,9 +154,9 @@ const page = (props: Props) => {
         pageTitleTr: record.title.tr,
         pageTitleEn: record.title.en,
         pageTitleRu: record.title.ru,
-        productLink: record.sections.find((obj: any) =>
-          obj.type.includes(record?.title?.en)
-        ).content,
+        productLink: record.sections.find(
+          (obj: any) => obj.type === `360-${slugify(record?.title?.en)}`
+        )?.content,
       });
     }
   }, [record, form]);

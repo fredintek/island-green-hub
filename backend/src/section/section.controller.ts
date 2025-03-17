@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   NotFoundException,
@@ -9,6 +10,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -166,7 +168,11 @@ export class SectionController {
    */
   @Get('type/:sectionType')
   @Auth(AuthType.None)
-  getSingleSectionByType(@Param('sectionType') sectionType: string) {
-    return this.sectionService.getSingleSectionByType(sectionType);
+  getSingleSectionByType(
+    @Param('sectionType') sectionType: string,
+    @Query('pageId', new ParseIntPipe({ optional: true }))
+    pageId: number | null,
+  ) {
+    return this.sectionService.getSingleSectionByType(sectionType, pageId);
   }
 }

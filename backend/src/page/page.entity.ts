@@ -78,7 +78,7 @@ export class Page {
   @BeforeInsert()
   @BeforeUpdate()
   generateSlug() {
-    if (this.title?.en) {
+    if (!this.slug) {
       this.slug = slugify(this.title.en, { lower: true, trim: true });
     }
   }

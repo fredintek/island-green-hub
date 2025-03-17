@@ -106,10 +106,7 @@ export class ProjectHouseService {
       );
     }
 
-    return {
-      message: 'Project house found successfully',
-      data: projectHouse,
-    };
+    return projectHouse;
   }
 
   public async updateIsHomePage(isHomePageDto: IsHomePageDto) {

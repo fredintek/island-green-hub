@@ -21,6 +21,7 @@ import { CreateBulkAboutPageDto } from '../dtos/create-about-page.dto';
 import { UpdateBulkAboutPageDto } from '../dtos/update-about-page.dto';
 import { deleteServerFile } from 'src/utils/uploadFileToSystem';
 import { IsHomePageDto } from 'src/project-house/dtos/is-home-page.dto';
+import slugify from 'slugify';
 
 @Injectable()
 export class PageService {
@@ -236,6 +237,7 @@ export class PageService {
       const newPage = queryRunner.manager.create(Page, {
         title: create360PageDto.title,
         parentPage,
+        slug: `360-${slugify(create360PageDto?.title?.en)}`,
       });
 
       await queryRunner.manager.save(newPage);
@@ -243,7 +245,7 @@ export class PageService {
       // create section for the new page with product link
       const productLinkSection = await queryRunner.manager.create(Section, {
         page: newPage,
-        type: `${create360PageDto.title.en}-360`,
+        type: `360-${slugify(create360PageDto?.title?.en)}`,
         sortId: 0,
         content: create360PageDto.productLink,
       });
@@ -349,6 +351,7 @@ export class PageService {
       }
 
       targetPage.title = update360PageDto.title || targetPage.title;
+      targetPage.slug = `360-${slugify(targetPage?.title?.en)}`;
       await queryRunner.manager.save(targetPage);
 
       // get section with the section type and update the section
@@ -364,6 +367,7 @@ export class PageService {
 
       sectionToUpdate.content =
         update360PageDto.productLink || sectionToUpdate.content;
+      sectionToUpdate.type = `360-${slugify(targetPage?.title?.en)}`;
       await queryRunner.manager.save(sectionToUpdate);
 
       // now commit and return
@@ -522,7 +526,7 @@ export class PageService {
 
     // Fetch pages based on conditions
     const pages = await this.pageRepository.find({
-      relations: ['subPages', 'sections'],
+      relations: ['subPages', 'sections', 'projectHouse'],
       where: whereCondition,
     });
 
