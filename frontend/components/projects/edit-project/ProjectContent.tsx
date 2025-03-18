@@ -1,3 +1,4 @@
+import { baseUrl } from "@/constants";
 import {
   useDeleteFileMutation,
   useGetSectionByPageIdQuery,
@@ -137,37 +138,37 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
     if (targetSection) {
       setProjectFileList([
         {
-          uid: targetSection?.content?.image,
+          uid: `${baseUrl}${targetSection?.content?.image}`,
           name: "image",
           status: "done",
-          url: targetSection?.content?.image,
+          url: `${baseUrl}${targetSection?.content?.image}`,
         },
       ]);
 
       setProjectPdfList([
         {
-          uid: targetSection?.content?.pdf,
+          uid: `${baseUrl}${targetSection?.content?.pdf}`,
           name: "pdf",
           status: "done",
-          url: targetSection?.content?.pdf,
+          url: `${baseUrl}${targetSection?.content?.pdf}`,
         },
       ]);
 
       form.setFieldsValue({
         projectImages: [
           {
-            uid: targetSection?.content?.image,
+            uid: `${baseUrl}${targetSection?.content?.image}`,
             name: "image",
             status: "done",
-            url: targetSection?.content?.image,
+            url: `${baseUrl}${targetSection?.content?.image}`,
           },
         ],
         projectPdf: [
           {
-            uid: targetSection?.content?.pdf,
+            uid: `${baseUrl}${targetSection?.content?.pdf}`,
             name: "pdf",
             status: "done",
-            url: targetSection?.content?.pdf,
+            url: `${baseUrl}${targetSection?.content?.pdf}`,
           },
         ],
         projectContentTr: targetSection?.content?.description?.tr,

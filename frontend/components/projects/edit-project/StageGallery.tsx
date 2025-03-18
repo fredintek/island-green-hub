@@ -1,4 +1,5 @@
 import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
+import { baseUrl } from "@/constants";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
@@ -115,19 +116,19 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
     if (targetSection) {
       setStage2Images(
         targetSection?.content?.map((img: any) => ({
-          uid: img,
+          uid: `${baseUrl}${img}`,
           name: "image",
           status: "done",
-          url: img,
+          url: `${baseUrl}${img}`,
         }))
       );
 
       form.setFieldsValue({
         stage2Images: targetSection?.content?.map((img: any) => ({
-          uid: img,
+          uid: `${baseUrl}${img}`,
           name: "image",
           status: "done",
-          url: img,
+          url: `${baseUrl}${img}`,
         })),
       });
     }

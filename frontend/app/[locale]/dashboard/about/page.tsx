@@ -1,4 +1,5 @@
 "use client";
+import { baseUrl } from "@/constants";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
   useCreateBulkAboutPageMutation,
@@ -225,7 +226,7 @@ const page = (props: Props) => {
             uid: 1,
             name: "image",
             status: "done",
-            url: targetSection?.content?.image[0],
+            url: `${baseUrl}${targetSection?.content?.image[0]}`,
           },
         ],
       });

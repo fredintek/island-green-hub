@@ -12,6 +12,7 @@ import {
 } from "@/redux/api/sectionApiSlice";
 import { getImagePath } from "@/utils";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
+import { baseUrl } from "@/constants";
 
 const { Dragger } = Upload;
 
@@ -98,7 +99,7 @@ const UploadSection = (props: Props) => {
     try {
       await deleteFileFn({ filename: target }).unwrap();
       await removeLinkFn({
-        sectionId: getSectionData.data.id,
+        sectionId: getSectionData.id,
         link: filename,
       }).unwrap();
     } catch (error) {
@@ -118,7 +119,7 @@ const UploadSection = (props: Props) => {
         page: getPageBySlugData?.id,
         type: "home-hero",
         sortId: 0,
-        content: [...getSectionData?.data?.content, ...uploadedImages],
+        content: [...getSectionData?.content, ...uploadedImages],
       };
       await createSectionFn(data).unwrap();
     } catch (error) {
@@ -190,34 +191,32 @@ const UploadSection = (props: Props) => {
 
       <div className="flex flex-col gap-6">
         {/* default hero images */}
-        {(getSectionData?.data?.content?.length as number) > 0 && (
+        {(getSectionData?.content?.length as number) > 0 && (
           <div>
             <p className="text-lg text-black dark:text-gray-300 font-medium capitalize mb-2">
               Existing Hero Images
             </p>
             <div className="flex flex-wrap gap-10">
-              {getSectionData?.data?.content?.map(
-                (url: string, idx: number) => (
-                  <div
-                    key={idx}
-                    className="relative max-w-[300px] w-full aspect-video rounded-md overflow-hidden"
-                  >
-                    <img
-                      src={url}
-                      alt="default-image"
-                      className="w-full h-full object-cover"
-                    />
-                    {getSectionData?.data?.content?.length > 1 && (
-                      <Popconfirm
-                        title="Are you sure you want to"
-                        onConfirm={() => handleDeleteFile(url)}
-                      >
-                        <DeleteOutlined className="text-red-500 text-lg absolute top-2 right-2 cursor-pointer" />
-                      </Popconfirm>
-                    )}
-                  </div>
-                )
-              )}
+              {getSectionData?.content?.map((url: string, idx: number) => (
+                <div
+                  key={idx}
+                  className="relative max-w-[300px] w-full aspect-video rounded-md overflow-hidden"
+                >
+                  <img
+                    src={`${baseUrl}${url}`}
+                    alt="default-image"
+                    className="w-full h-full object-cover"
+                  />
+                  {getSectionData?.content?.length > 1 && (
+                    <Popconfirm
+                      title="Are you sure you want to"
+                      onConfirm={() => handleDeleteFile(url)}
+                    >
+                      <DeleteOutlined className="text-red-500 text-lg absolute top-2 right-2 cursor-pointer" />
+                    </Popconfirm>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

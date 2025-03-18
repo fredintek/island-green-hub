@@ -3,6 +3,7 @@ import {
   ensureArray,
   validateArray,
 } from "@/app/[locale]/dashboard/projects/add-project/page";
+import { baseUrl } from "@/constants";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { useUpdateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
 import {
@@ -209,21 +210,21 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
   useEffect(() => {
     if (record) {
-      const coverImage = record.coverImage
+      const coverImage = `${baseUrl}${record.coverImage}`
         ? [
             {
-              url: record.coverImage,
-              uid: record.coverImage,
+              url: `${baseUrl}${record.coverImage}`,
+              uid: `${baseUrl}${record.coverImage}`,
               name: "image",
               status: "done",
             },
           ]
         : [];
-      const displayImage = record.displayImage
+      const displayImage = `${baseUrl}${record.displayImage}`
         ? [
             {
-              url: record.displayImage,
-              uid: record.displayImage,
+              url: `${baseUrl}${record.displayImage}`,
+              uid: `${baseUrl}${record.displayImage}`,
               name: "image",
               status: "done",
             },
@@ -231,8 +232,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         : [];
       const gallery = record.gallery
         ? record?.gallery?.map((img: any) => ({
-            url: img,
-            uid: img,
+            url: `${baseUrl}${img}`,
+            uid: `${baseUrl}${img}`,
             name: "image",
             status: "done",
           }))

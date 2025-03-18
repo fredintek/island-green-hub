@@ -27,6 +27,7 @@ import { toast } from "react-toastify";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import { ensureArray } from "../projects/add-project/page";
 import { usePathname } from "next/navigation";
+import { baseUrl } from "@/constants";
 const { Dragger } = Upload;
 
 type Props = {};
@@ -120,10 +121,10 @@ const page = (props: Props) => {
     setOpenModal(true);
     setBlogFileList(
       targetSection?.content?.blogImages?.map((img: any) => ({
-        uid: img,
+        uid: `${baseUrl}${img}`,
         name: "image",
         status: "done",
-        url: img,
+        url: `${baseUrl}${img}`,
       }))
     );
     form.setFieldsValue({
@@ -137,10 +138,10 @@ const page = (props: Props) => {
       blogContentEn: targetSection?.content?.blogContent?.en,
       blogContentRu: targetSection?.content?.blogContent?.ru,
       blogImages: targetSection?.content?.blogImages?.map((img: any) => ({
-        uid: img,
+        uid: `${baseUrl}${img}`,
         name: "image",
         status: "done",
-        url: img,
+        url: `${baseUrl}${img}`,
       })),
     });
   };

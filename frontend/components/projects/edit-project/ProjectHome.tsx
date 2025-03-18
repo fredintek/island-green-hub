@@ -1,4 +1,5 @@
 import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
+import { baseUrl } from "@/constants";
 import {
   useLazyGetPageByIdQuery,
   useUpdatePageMutation,
@@ -131,10 +132,10 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
         if (targetPage) {
           setProjectHomeImageList(
             targetPage?.projectHomeImages.map((img: string) => ({
-              uid: img,
-              name: img,
+              uid: `${baseUrl}${img}`,
+              name: `${baseUrl}${img}`,
               status: "done",
-              url: img,
+              url: `${baseUrl}${img}`,
             }))
           );
 
@@ -145,10 +146,10 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
             projectHomeTextRu: targetPage?.projectHomeText?.ru,
             projectHomeImage: targetPage?.projectHomeImages.map(
               (img: string) => ({
-                uid: img,
-                name: img,
+                uid: `${baseUrl}${img}`,
+                name: `${baseUrl}${img}`,
                 status: "done",
-                url: img,
+                url: `${baseUrl}${img}`,
               })
             ),
           });
