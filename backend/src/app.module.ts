@@ -21,6 +21,7 @@ import { AuthenticationGuard } from './auth/guards/authentication/authentication
 import { AccessTokenGuard } from './auth/guards/access-token/access-token.guard';
 import { RoleGuard } from './auth/guards/role/role.guard';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { InfoModule } from './info/info.module';
 import cloudinaryConfig from './config/cloudinary.config';
 
 const ENV = process.env.NODE_ENV;
@@ -74,6 +75,7 @@ const ENV = process.env.NODE_ENV;
     UserModule,
     MailModule,
     CloudinaryModule,
+    InfoModule,
   ],
   controllers: [AppController],
   providers: [

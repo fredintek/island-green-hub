@@ -20,17 +20,12 @@ const page = (props: Props) => {
     []
   );
 
-  const {
-    data: getAllCommunicationData,
-    isLoading: getAllCommunicationIsLoading,
-    isError: getAllCommunicationIsError,
-    error: getAllCommunicationError,
-    refetch: getAllCommunicationRefetch,
-  } = useGetAllCommunicationQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    refetchOnReconnect: true,
-    refetchOnFocus: true,
-  });
+  const { data: getAllCommunicationData, refetch: getAllCommunicationRefetch } =
+    useGetAllCommunicationQuery(undefined, {
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+      refetchOnFocus: true,
+    });
 
   const [
     createCommunicationFn,
@@ -58,7 +53,7 @@ const page = (props: Props) => {
     try {
       if (isEditing) {
         await updateCommunicationFn({
-          id: getAllCommunicationData.data[0]?.id,
+          id: getAllCommunicationData[0]?.id,
           phoneNumber: values.telephone,
           email: values.email,
           address: values.location,
@@ -76,12 +71,12 @@ const page = (props: Props) => {
   };
 
   useEffect(() => {
-    if (getAllCommunicationData?.data?.length > 0) {
+    if (getAllCommunicationData?.length > 0) {
       setIsEditing(true);
       form.setFieldsValue({
-        telephone: getAllCommunicationData?.data[0]?.phoneNumber,
-        email: getAllCommunicationData?.data[0]?.email,
-        location: getAllCommunicationData?.data[0]?.address,
+        telephone: getAllCommunicationData[0]?.phoneNumber,
+        email: getAllCommunicationData[0]?.email,
+        location: getAllCommunicationData[0]?.address,
       });
     } else {
       setIsEditing(false);

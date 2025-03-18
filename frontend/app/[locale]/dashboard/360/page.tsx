@@ -89,7 +89,7 @@ const page = (props: Props) => {
       if (record) {
         const targetData = {
           id: record?.id,
-          sectionType: `360-${slugify(record?.title?.en)}`,
+          sectionType: `${slugify(record?.title?.en)}-degree-view`,
           title: {
             tr: values.pageTitleTr,
             en: values.pageTitleEn,
@@ -155,7 +155,7 @@ const page = (props: Props) => {
         pageTitleEn: record.title.en,
         pageTitleRu: record.title.ru,
         productLink: record.sections.find(
-          (obj: any) => obj.type === `360-${slugify(record?.title?.en)}`
+          (obj: any) => obj.type === `${slugify(record?.title?.en)}-degree-view`
         )?.content,
       });
     }

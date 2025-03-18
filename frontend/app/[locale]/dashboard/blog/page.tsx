@@ -99,11 +99,6 @@ const page = (props: Props) => {
     },
   ] = useUpdateSectionMutation();
 
-  const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
-
   const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
     useUploadFileMutation();
 

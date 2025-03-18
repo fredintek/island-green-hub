@@ -10,6 +10,10 @@ export class MailService {
      */
     private mailerService: MailerService,
   ) {}
+
+  /**
+   * send welcome email for newly registered users
+   */
   public async sendUserWelcome(user: User): Promise<void> {
     await this.mailerService.sendMail({
       to: user.email,
@@ -20,6 +24,9 @@ export class MailService {
     });
   }
 
+  /**
+   * send reset password token email
+   */
   public async sendResetPasswordToken(user: User, resetPasswordToken: string) {
     await this.mailerService.sendMail({
       to: user.email,
@@ -27,6 +34,50 @@ export class MailService {
       subject: 'Reset Password Request',
       template: './reset-password',
       context: { user, resetPasswordToken },
+    });
+  }
+
+  /**
+   * send user register to news letter
+   */
+  public async recievedNewsletter(email: string) {
+    await this.mailerService.sendMail({
+      to: email,
+      from: 'noreply@example.com',
+      subject: 'Welcome to Our Newsletter!',
+      template: './newsletter-recieved',
+    });
+  }
+
+  /**
+   * send career application recieved email
+   */
+  public async recievedCareerApplication(user: {
+    email: string;
+    name: string;
+  }) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      from: 'noreply@example.com',
+      subject: 'Application Received',
+      template: './career-application-recieved',
+      context: { user },
+    });
+  }
+
+  /**
+   * send consultation request recieved email
+   */
+  public async consultationRequestRecieved(user: {
+    email: string;
+    name: string;
+  }) {
+    await this.mailerService.sendMail({
+      to: user.email,
+      from: 'noreply@example.com',
+      subject: 'Your Consultation Request is Received',
+      template: './consultation-request-recieved',
+      context: { user },
     });
   }
 }

@@ -27,17 +27,14 @@ const page = (props: Props) => {
   const [openModal, setOpenModal] = useState(false);
   const [editingFaq, setEditingFaq] = useState<Faq | null>(null);
 
-  const {
-    data: getAllFaqData,
-    isLoading: getAllFaqIsLoading,
-    isError: getAllFaqIsError,
-    error: getAllFaqError,
-    refetch: getAllFaqRefetch,
-  } = useGetAllFaqsQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    refetchOnReconnect: true,
-    refetchOnFocus: true,
-  });
+  const { data: getAllFaqData, refetch: getAllFaqRefetch } = useGetAllFaqsQuery(
+    undefined,
+    {
+      refetchOnMountOrArgChange: true,
+      refetchOnReconnect: true,
+      refetchOnFocus: true,
+    }
+  );
 
   const [
     createFaqFn,
@@ -229,7 +226,7 @@ const page = (props: Props) => {
           </button>
           <Table
             columns={faqColumn}
-            dataSource={getAllFaqData?.data || []}
+            dataSource={getAllFaqData || []}
             scroll={{ x: 768 }}
             className=""
           />

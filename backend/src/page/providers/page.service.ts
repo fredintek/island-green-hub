@@ -237,7 +237,7 @@ export class PageService {
       const newPage = queryRunner.manager.create(Page, {
         title: create360PageDto.title,
         parentPage,
-        slug: `360-${slugify(create360PageDto?.title?.en)}`,
+        slug: `${slugify(create360PageDto?.title?.en)}-degree-view`,
       });
 
       await queryRunner.manager.save(newPage);
@@ -245,7 +245,7 @@ export class PageService {
       // create section for the new page with product link
       const productLinkSection = await queryRunner.manager.create(Section, {
         page: newPage,
-        type: `360-${slugify(create360PageDto?.title?.en)}`,
+        type: `${slugify(create360PageDto?.title?.en)}-degree-view`,
         sortId: 0,
         content: create360PageDto.productLink,
       });
@@ -351,7 +351,7 @@ export class PageService {
       }
 
       targetPage.title = update360PageDto.title || targetPage.title;
-      targetPage.slug = `360-${slugify(targetPage?.title?.en)}`;
+      targetPage.slug = `${slugify(targetPage?.title?.en)}-degree-view`;
       await queryRunner.manager.save(targetPage);
 
       // get section with the section type and update the section
@@ -367,7 +367,7 @@ export class PageService {
 
       sectionToUpdate.content =
         update360PageDto.productLink || sectionToUpdate.content;
-      sectionToUpdate.type = `360-${slugify(targetPage?.title?.en)}`;
+      sectionToUpdate.type = `${slugify(targetPage?.title?.en)}-degree-view`;
       await queryRunner.manager.save(sectionToUpdate);
 
       // now commit and return

@@ -20,10 +20,7 @@ export class FaqService {
    */
   public async getAllFaq() {
     const faqs = await this.faqRepository.find();
-    return {
-      message: 'Successfully retrieved all FAQs',
-      data: faqs,
-    };
+    return faqs;
   }
 
   /**

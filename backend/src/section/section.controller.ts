@@ -48,6 +48,7 @@ export class SectionController {
    * Upload Images to server
    */
   @Post('upload-file')
+  @Auth(AuthType.None)
   @UseInterceptors(
     FilesInterceptor('files', 500, {
       storage: memoryStorage(),
