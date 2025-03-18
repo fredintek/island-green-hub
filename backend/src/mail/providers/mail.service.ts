@@ -17,7 +17,6 @@ export class MailService {
   public async sendUserWelcome(user: User): Promise<void> {
     await this.mailerService.sendMail({
       to: user.email,
-      from: 'noreply@example.com',
       subject: 'Welcome to our platform!',
       template: './welcome',
       context: { user },
@@ -30,7 +29,6 @@ export class MailService {
   public async sendResetPasswordToken(user: User, resetPasswordToken: string) {
     await this.mailerService.sendMail({
       to: user.email,
-      from: 'noreply@example.com',
       subject: 'Reset Password Request',
       template: './reset-password',
       context: { user, resetPasswordToken },
@@ -43,7 +41,6 @@ export class MailService {
   public async recievedNewsletter(email: string) {
     await this.mailerService.sendMail({
       to: email,
-      from: 'noreply@example.com',
       subject: 'Welcome to Our Newsletter!',
       template: './newsletter-recieved',
     });
@@ -58,7 +55,6 @@ export class MailService {
   }) {
     await this.mailerService.sendMail({
       to: user.email,
-      from: 'noreply@example.com',
       subject: 'Application Received',
       template: './career-application-recieved',
       context: { user },
@@ -74,7 +70,6 @@ export class MailService {
   }) {
     await this.mailerService.sendMail({
       to: user.email,
-      from: 'noreply@example.com',
       subject: 'Your Consultation Request is Received',
       template: './consultation-request-recieved',
       context: { user },

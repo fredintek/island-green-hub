@@ -8,8 +8,6 @@ import {
   useRemoveLinkFromSectionContentMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { toast } from "react-toastify";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { baseUrl } from "@/constants";
