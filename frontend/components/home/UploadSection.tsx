@@ -10,7 +10,6 @@ import {
   useRemoveLinkFromSectionContentMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
-import { getImagePath } from "@/utils";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { baseUrl } from "@/constants";
 

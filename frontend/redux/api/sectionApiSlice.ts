@@ -5,7 +5,7 @@ export const sectionApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     // Get Section by page ID
     getSectionByPageId: builder.query({
-      query: (id) => `/section/page/${id}`,
+      query: (id: number) => `/section/page/${id}`,
     }),
 
     // Get Section By Page Name

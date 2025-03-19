@@ -17,6 +17,9 @@ import slugify from "slugify";
 
 type Props = {};
 
+export const splitText = (target: string | string[]): string =>
+  Array.isArray(target) ? target?.join(",") : target;
+
 const page = (props: Props) => {
   const nextPath = usePathname();
   const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
@@ -172,7 +175,7 @@ const page = (props: Props) => {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(splitText(customError.data.message));
     }
   }, [
     createBulk360PageIsSuccess,
@@ -192,7 +195,7 @@ const page = (props: Props) => {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(splitText(customError.data.message));
     }
   }, [
     updateBulk360PageIsSuccess,
@@ -212,7 +215,7 @@ const page = (props: Props) => {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(splitText(customError.data.message));
     }
   }, [deletePageIsSuccess, deletePageIsError, deletePageError, deletePageData]);
 

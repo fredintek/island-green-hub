@@ -1,3 +1,4 @@
+import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
 import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { baseUrl } from "@/constants";
 import {
@@ -19,10 +20,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
+const ProjectContent = ({ pageData }: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)
   const ReactQuill = useMemo(
     () => dynamic(() => import("react-quill-new"), { ssr: false }),
@@ -78,7 +78,7 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
 
           return null;
         }
-        return value.url;
+        return extractedPath(value.url);
       };
 
       let formData = new FormData();
@@ -111,15 +111,6 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
         },
       };
       await updatePageFn(targetData).unwrap();
-      // if (targetPage?.projectHomeImages) {
-      //   // delete old images
-      //   Promise.all(
-      //     targetPage?.projectHomeImages?.map(async (img: string) => {
-      //       const target = img.split("uploads/").pop();
-      //       await deleteFileFn({ filename: target }).unwrap();
-      //     })
-      //   );
-      // }
     } catch (error) {
       console.error("Error uploading files:", error);
     }
@@ -167,7 +158,6 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updatePageIsSuccess) {
       toast.success("Project Content updated successfully");
-      refetchEditedData(getSectionByTypeData?.data?.page?.slug);
     }
 
     if (updatePageIsError) {

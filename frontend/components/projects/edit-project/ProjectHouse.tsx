@@ -1,19 +1,25 @@
 "use client";
+import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
 import {
   ensureArray,
   validateArray,
 } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { baseUrl } from "@/constants";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
-import { useUpdateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
 import {
-  useDeleteFileMutation,
-  useUploadFileMutation,
-} from "@/redux/api/sectionApiSlice";
+  useDeleteProjectHouseMutation,
+  useUpdateProjectHouseMutation,
+} from "@/redux/api/projectHouseApiSlice";
+import { useUploadFileMutation } from "@/redux/api/sectionApiSlice";
 import { prepareFileUpload } from "@/utils";
 import { Page } from "@/utils/interfaces";
-import { EditOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
-import { Form, Input, Modal, Upload } from "antd";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  InboxOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { Form, Input, Modal, Popconfirm, Upload } from "antd";
 import Dragger from "antd/es/upload/Dragger";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
@@ -22,10 +28,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
+const ProjectHouse = ({ pageData }: Props) => {
   const [form] = Form.useForm();
   const params = useParams() as { locale: string; slug: string };
   // Dynamically load the ReactQuill component (to prevent SSR issues)
@@ -50,6 +55,17 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   });
 
   const [
+    deleteProjectHouse,
+    {
+      isLoading: deleteProjectHouseLoading,
+      isError: deleteProjectHouseIsError,
+      error: deleteProjectHouseError,
+      data: deleteProjectHouseData,
+      isSuccess: deleteProjectHouseIsSuccess,
+    },
+  ] = useDeleteProjectHouseMutation();
+
+  const [
     updateProjectHouseFn,
     {
       isLoading: updateProjectHouseIsLoading,
@@ -63,9 +79,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
     useUploadFileMutation();
 
-  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
-    useDeleteFileMutation();
-
   const handleUploadChangeProjectHouseCoverImage = ({ fileList }: any) => {
     setProjectHouseCoverImageFileList(fileList);
     form.setFieldsValue({ projectHouseCoverImage: fileList });
@@ -76,11 +89,15 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     form.setFieldsValue({ projectHouseDisplayImage: fileList });
   };
 
-  const handleSubmit = async (values: any) => {
-    const targetProjectHouse = getPageBySlugData?.projectHouse?.find(
-      (obj: any) => obj?.id === record?.id
-    );
+  const handleDeleteProjectHouse = async (id: number) => {
+    try {
+      await deleteProjectHouse(id).unwrap();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
+  const handleSubmit = async (values: any) => {
     const prepareUpload = (value: any, formData: FormData, tag: string) => {
       if (!value.url) {
         formData.append("files", value.originFileObj);
@@ -88,7 +105,7 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
         return null;
       }
-      return value.url;
+      return extractedPath(value.url);
     };
     try {
       let coverImageFormData = new FormData();
@@ -123,12 +140,16 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
       projectHouseCoverImage =
         typeof projectHouseCoverImage === "string"
-          ? projectHouseCoverImage
-          : projectHouseCoverImage?.projectHouseCoverImage;
+          ? extractedPath(projectHouseCoverImage)
+          : ensureArray(projectHouseCoverImage?.projectHouseCoverImage)?.map(
+              (item: string) => extractedPath(item)
+            );
       projectHouseDisplayImage =
         typeof projectHouseDisplayImage === "string"
-          ? projectHouseDisplayImage
-          : projectHouseDisplayImage?.projectHouseDisplayImage;
+          ? extractedPath(projectHouseDisplayImage)
+          : ensureArray(
+              projectHouseDisplayImage?.projectHouseDisplayImage
+            )?.map((item: string) => extractedPath(item));
 
       // project house gallery
       let galleryFormData = new FormData();
@@ -155,8 +176,8 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       // DATA
       const targetData = {
         id: record?.id,
-        coverImage: projectHouseCoverImage,
-        displayImage: projectHouseDisplayImage,
+        coverImage: ensureArray(projectHouseCoverImage)[0],
+        displayImage: ensureArray(projectHouseDisplayImage)[0],
         gallery: validateArray(ensureArray(galleryImages)),
         title: {
           en: values.projectHouseTitleEn,
@@ -183,26 +204,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       await updateProjectHouseFn(targetData).unwrap();
       setIsOpenModal(false);
       setRecord(null);
-
-      // delete old files
-      await Promise.all(
-        targetProjectHouse?.homeImages?.map(async (content: string) => {
-          const target = content.split("uploads/").pop();
-          return await deleteFileFn({ filename: target }).unwrap();
-        })
-      );
-      await Promise.all(
-        targetProjectHouse?.gallery?.map(async (content: string) => {
-          const target = content.split("uploads/").pop();
-          return await deleteFileFn({ filename: target }).unwrap();
-        })
-      );
-      await deleteFileFn({
-        filename: targetProjectHouse?.coverImage?.split("uploads/").pop(),
-      }).unwrap();
-      await deleteFileFn({
-        filename: targetProjectHouse?.displayImage?.split("uploads/").pop(),
-      }).unwrap();
     } catch (error) {
       console.error(error);
     }
@@ -270,7 +271,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       toast.success("Project house updated successfully");
       setIsOpenModal(false);
       setRecord(null);
-      refetchEditedData(getPageBySlugData?.slug);
     }
 
     if (updateProjectHouseIsError) {
@@ -292,18 +292,50 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     updateProjectHouseData,
   ]);
 
+  useEffect(() => {
+    if (deleteProjectHouseIsSuccess) {
+      toast.success("Project house deleted successfully");
+    }
+
+    if (deleteProjectHouseIsError) {
+      const customErrorV1 = deleteProjectHouseError as {
+        data: any;
+        status: number;
+      };
+      const customErrorV2 = deleteProjectHouseError as {
+        message: string | string[];
+        error: string;
+        statusCode: number;
+      };
+      toast.error(customErrorV1.data.message || customErrorV2.message);
+    }
+  }, [
+    deleteProjectHouseIsSuccess,
+    deleteProjectHouseIsError,
+    deleteProjectHouseError,
+    deleteProjectHouseData,
+  ]);
+
   return (
     <>
       <div className="flex flex-wrap gap-6">
         {getPageBySlugData?.projectHouse?.map((obj: any) => (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
             <p>{obj.title.en}</p>
-            <EditOutlined
-              onClick={() => {
-                setRecord(obj);
-                setIsOpenModal(true);
-              }}
-            />
+            <div className="flex items-center gap-1">
+              <EditOutlined
+                onClick={() => {
+                  setRecord(obj);
+                  setIsOpenModal(true);
+                }}
+              />
+              <Popconfirm
+                title="Are you sure?"
+                onConfirm={() => handleDeleteProjectHouse(obj?.id)}
+              >
+                <DeleteOutlined />
+              </Popconfirm>
+            </div>
           </div>
         ))}
       </div>
@@ -594,15 +626,9 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
             onClick={() => form.submit()}
             type="button"
             className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
-            disabled={
-              uploadFileIsLoading ||
-              deleteFileIsLoading ||
-              updateProjectHouseIsLoading
-            }
+            disabled={uploadFileIsLoading || updateProjectHouseIsLoading}
           >
-            {uploadFileIsLoading ||
-            deleteFileIsLoading ||
-            updateProjectHouseIsLoading ? (
+            {uploadFileIsLoading || updateProjectHouseIsLoading ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (
               <p className="uppercase font-medium">Save</p>

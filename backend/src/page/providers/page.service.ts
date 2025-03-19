@@ -417,7 +417,7 @@ export class PageService {
 
       // get section with the section type and update the section
       const sectionToUpdate = await queryRunner.manager.findOne(Section, {
-        where: { type: updateBulkAboutPageDto.sectionType },
+        where: { id: updateBulkAboutPageDto.sectionId },
       });
 
       if (!sectionToUpdate) {

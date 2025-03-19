@@ -32,6 +32,9 @@ const { Dragger } = Upload;
 
 type Props = {};
 
+export const extractedPath = (url: string) =>
+  `/uploads/${url.split("/uploads/")[1]}`;
+
 const page = (props: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)
   const ReactQuill = useMemo(
@@ -160,7 +163,7 @@ const page = (props: Props) => {
 
           return null;
         }
-        return value.url;
+        return extractedPath(value.url);
       };
       try {
         let formData = new FormData();

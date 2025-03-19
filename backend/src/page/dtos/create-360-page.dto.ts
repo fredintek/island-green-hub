@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  IsUrl,
+  ValidateNested,
+} from 'class-validator';
 import { MultilingualTextDto } from 'src/project-house/dtos/create-project-house.dto';
 
 export class Create360PageDto {
@@ -13,6 +19,6 @@ export class Create360PageDto {
   title: MultilingualTextDto;
 
   @IsNotEmpty()
-  @IsString()
+  @IsUrl()
   productLink: string;
 }

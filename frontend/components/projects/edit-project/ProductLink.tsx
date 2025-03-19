@@ -9,10 +9,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProductLink = ({ pageData, refetchEditedData }: Props) => {
+const ProductLink = ({ pageData }: Props) => {
   const [form] = Form.useForm();
 
   const [

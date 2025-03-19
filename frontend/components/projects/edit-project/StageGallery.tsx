@@ -1,3 +1,4 @@
+import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
 import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { baseUrl } from "@/constants";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
@@ -18,14 +19,11 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const StageGallery = ({ pageData, refetchEditedData }: Props) => {
+const StageGallery = ({ pageData }: Props) => {
   const [form] = Form.useForm();
   const [stage2Images, setStage2Images] = useState<any>([]);
-  const [isImageUploadToCloud, setIsImageUploadToCloud] =
-    useState<boolean>(false);
   const [pageContentData, setPageContentData] = useState<any>({});
 
   const { data: getSectionByTypeData } = useGetSectionByPageIdQuery(
@@ -42,11 +40,6 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
 
   const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
     useDeleteFileMutation();
-
-  const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
 
   const [
     updateSectionFn,
@@ -71,7 +64,7 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
 
         return null;
       }
-      return value.url;
+      return extractedPath(value.url);
     };
     try {
       let formData = new FormData();
@@ -94,14 +87,6 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
         id: targetSection?.id,
         content: stage2Images,
       }).unwrap();
-
-      // delete old files
-      await Promise.all(
-        targetSection?.content?.map(async (content: string) => {
-          const target = content.split("uploads/").pop();
-          return await deleteFileFn({ filename: target }).unwrap();
-        })
-      );
 
       // You can now use `stage2Images` to submit the final data
     } catch (error) {
@@ -137,7 +122,6 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updateSectionIsSuccess) {
       toast.success("Gallery updated successfully");
-      refetchEditedData(getSectionByTypeData?.data?.page?.slug);
     }
 
     if (updateSectionIsError) {
@@ -201,13 +185,11 @@ const StageGallery = ({ pageData, refetchEditedData }: Props) => {
         type="button"
         className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
         disabled={
-          isImageUploadToCloud ||
-          deleteFileFromCloudinaryIsLoading ||
-          updateSectionIsLoading
+          uploadFileIsLoading || deleteFileIsLoading || updateSectionIsLoading
         }
       >
-        {isImageUploadToCloud ||
-        deleteFileFromCloudinaryIsLoading ||
+        {uploadFileIsLoading ||
+        deleteFileIsLoading ||
         updateSectionIsLoading ? (
           <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
         ) : (

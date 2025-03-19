@@ -197,19 +197,23 @@ const ContactSection = (props: Props) => {
       {/* content */}
       <div className="">
         {(getSectionData?.content?.length as number) > 0 && (
-          <div className="bg-white dark:bg-[#1e293b] max-w-[300px] w-full aspect-video p-1 flex flex-col gap-2">
+          <div
+            key={"khvcbdk"}
+            className="bg-white dark:bg-[#1e293b] max-w-[300px] w-full aspect-video p-1 flex flex-col gap-2"
+          >
             <p className="text-lg text-black dark:text-gray-300 font-medium capitalize">
               Existing Video
             </p>
-            {getSectionData?.content?.map((url: string) => (
+            {getSectionData?.content?.map((url: string, idx: number) => (
               <>
                 <Popconfirm
+                  key={`${idx}-pop`}
                   title="Are you sure you want to"
                   onConfirm={() => handleDeleteVideo(url)}
                 >
                   <DeleteOutlined className="text-base self-end cursor-pointer text-red-500" />
                 </Popconfirm>
-                <div className="bg-gray-300 w-full h-full rounded-md">
+                <div key={idx} className="bg-gray-300 w-full h-full rounded-md">
                   <video
                     className="w-full block h-full object-cover rounded-md"
                     autoPlay

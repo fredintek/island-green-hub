@@ -7,30 +7,16 @@ import ProjectLocation from "@/components/projects/edit-project/ProjectLocation"
 import ProjectTitle from "@/components/projects/edit-project/ProjectTitle";
 import StageGallery from "@/components/projects/edit-project/StageGallery";
 import YoutubeVideos from "@/components/projects/edit-project/YoutubeVideos";
-import { useLazyGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
+import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { useParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 
 type Props = {};
 
 const page = (props: Props) => {
   const params = useParams() as { locale: string; slug: string };
 
-  const [
-    getPageBySlugFn,
-    {
-      data: getAllPageBySlugData,
-      isLoading: getAllPageBySlugIsLoading,
-      isError: getAllPageBySlugIsError,
-      error: getAllPageBySlugError,
-    },
-  ] = useLazyGetPageBySlugQuery();
-
-  useEffect(() => {
-    if (params?.slug) {
-      getPageBySlugFn(params.slug);
-    }
-  }, [params?.slug]);
+  const { data: getAllPageBySlugData } = useGetPageBySlugQuery(params?.slug);
 
   return (
     <section className="flex flex-col">
@@ -45,10 +31,7 @@ const page = (props: Props) => {
             Project Title
           </p>
 
-          <ProjectTitle
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <ProjectTitle pageData={getAllPageBySlugData} />
         </div>
 
         {/* product link */}
@@ -57,10 +40,7 @@ const page = (props: Props) => {
             Product Link
           </p>
 
-          <ProductLink
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <ProductLink pageData={getAllPageBySlugData} />
         </div>
 
         {/* project home */}
@@ -69,10 +49,7 @@ const page = (props: Props) => {
             Project Home
           </p>
 
-          <ProjectHome
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <ProjectHome pageData={getAllPageBySlugData} />
         </div>
 
         {/* project content */}
@@ -81,10 +58,7 @@ const page = (props: Props) => {
             Project Content
           </p>
 
-          <ProjectContent
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <ProjectContent pageData={getAllPageBySlugData} />
         </div>
 
         {/* project house */}
@@ -93,10 +67,7 @@ const page = (props: Props) => {
             Product House
           </p>
 
-          <ProjectHouse
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <ProjectHouse pageData={getAllPageBySlugData} />
         </div>
 
         {/* stage 2 */}
@@ -105,10 +76,7 @@ const page = (props: Props) => {
             Stage Gallery
           </p>
 
-          <StageGallery
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <StageGallery pageData={getAllPageBySlugData} />
         </div>
 
         {/* location */}
@@ -117,10 +85,7 @@ const page = (props: Props) => {
             Project Location
           </p>
 
-          <ProjectLocation
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <ProjectLocation pageData={getAllPageBySlugData} />
         </div>
 
         {/* youtube videos */}
@@ -129,10 +94,7 @@ const page = (props: Props) => {
             Youtube Videos
           </p>
 
-          <YoutubeVideos
-            pageData={getAllPageBySlugData}
-            refetchEditedData={getPageBySlugFn}
-          />
+          <YoutubeVideos pageData={getAllPageBySlugData} />
         </div>
       </div>
     </section>
