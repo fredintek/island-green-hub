@@ -15,7 +15,7 @@
 /backend/lerna-debug.log*
 
 # OS
-/backend/.DS_Store
+/backend/.DS_Store 
 
 # Tests
 /backend/coverage
@@ -51,7 +51,7 @@
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 /backend/report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-/backend/uploads
+# /backend/uploads
 
 
 # FRONTEND
