@@ -23,10 +23,6 @@ import { RoleGuard } from './auth/guards/role/role.guard';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { InfoModule } from './info/info.module';
 import cloudinaryConfig from './config/cloudinary.config';
-<<<<<<< HEAD
-=======
-
->>>>>>> 20d801c3322234431d166b844ad7cd3c45bddc82
 @Module({
   imports: [
     ConfigModule.forRoot({
