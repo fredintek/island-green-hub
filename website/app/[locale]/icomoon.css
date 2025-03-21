@@ -1,0 +1,124 @@
+@font-face {
+  font-family: 'icomoon';
+  src: url('fonts/icomoon.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-pin:before {
+  content: "\e91f";
+}
+.icon-email:before {
+  content: "\e920";
+}
+.icon-telephone:before {
+  content: "\e921";
+}
+.icon-data:before {
+  content: "\e900";
+}
+.icon-magnifying-glass:before {
+  content: "\e901";
+}
+.icon-construction-worker:before {
+  content: "\e902";
+}
+.icon-roof:before {
+  content: "\e903";
+}
+.icon-joist:before {
+  content: "\e904";
+}
+.icon-roof-1:before {
+  content: "\e905";
+}
+.icon-roof-2:before {
+  content: "\e906";
+}
+.icon-shield:before {
+  content: "\e907";
+}
+.icon-mission:before {
+  content: "\e908";
+}
+.icon-tick:before {
+  content: "\e909";
+}
+.icon-phone-call:before {
+  content: "\e90a";
+}
+.icon-location:before {
+  content: "\e90b";
+}
+.icon-message:before {
+  content: "\e90c";
+}
+.icon-approved:before {
+  content: "\e90d";
+}
+.icon-labour-day:before {
+  content: "\e90e";
+}
+.icon-asbestos:before {
+  content: "\e90f";
+}
+.icon-tick-1:before {
+  content: "\e910";
+}
+.icon-award:before {
+  content: "\e911";
+}
+.icon-roof-3:before {
+  content: "\e912";
+}
+.icon-construction-worker-1:before {
+  content: "\e913";
+}
+.icon-support:before {
+  content: "\e914";
+}
+.icon-analysis:before {
+  content: "\e915";
+}
+.icon-asbestos-1:before {
+  content: "\e916";
+}
+.icon-roof-4:before {
+  content: "\e917";
+}
+.icon-right-arrow:before {
+  content: "\e918";
+}
+.icon-left-arrow:before {
+  content: "\e919";
+}
+.icon-top-arrow:before {
+  content: "\e91a";
+}
+.icon-bottom-arrow:before {
+  content: "\e91b";
+}
+.icon-roof-5:before {
+  content: "\e91c";
+}
+.icon-confirmation:before {
+  content: "\e91d";
+}
+.icon-online-registration:before {
+  content: "\e91e";
+}
