@@ -90,5 +90,46 @@
 /frontend/*.tsbuildinfo
 /frontend/next-env.d.ts
 
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/website/node_modules
+/website/.pnp
+/website/.pnp.js
+/website/.yarn/install-state.gz
+
+# testing
+/website/coverage
+
+# next.js
+/website/.next/
+/website/out/
+
+# production
+/website/build
+
+# misc
+/website/.DS_Store
+/website/*.pem
+
+# debug
+/website/npm-debug.log*
+/website/yarn-debug.log*
+/website/yarn-error.log*
+
+# env files
+/website/.env
+
+# local env files
+/website/.env*.local
+
+# vercel
+/website/.vercel
+
+# typescript
+/website/*.tsbuildinfo
+/website/next-env.d.ts
+
+
 
 /docker-compose.yml

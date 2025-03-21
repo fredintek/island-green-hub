@@ -5,13 +5,12 @@ COPY package*.json ./
 RUN npm install
 
 # Set environment variables
-ENV NEXT_PUBLIC_BASE_URL=http://localhost:1111
-ENV NEXT_PUBLIC_API_URL=http://backend:1111
+ENV NEXT_PUBLIC_API_URL=http://localhost:1111
 
 # Development Stage
 FROM base AS development
 COPY . .
-EXPOSE 4001
+EXPOSE 3001
 CMD ["npm", "run", "dev"]
 
 # Build Stage (for production)
@@ -27,5 +26,5 @@ COPY --from=builder /usr/src/app/public ./public
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
 
-EXPOSE 4001
+EXPOSE 3001
 CMD ["npm", "start"]
