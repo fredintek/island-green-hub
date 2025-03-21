@@ -23,14 +23,11 @@ import { RoleGuard } from './auth/guards/role/role.guard';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { InfoModule } from './info/info.module';
 import cloudinaryConfig from './config/cloudinary.config';
-
-const ENV = process.env.NODE_ENV;
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: !ENV ? '.env.production' : `.env.${ENV}`,
+      envFilePath: '.env',
       load: [
         appConfig,
         databaseConfig,

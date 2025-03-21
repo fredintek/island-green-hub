@@ -6,8 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 const intlMiddleware = createMiddleware(routing);
 
 // Backend API URL for verifying refresh tokens
-// const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-refresh-token`;
-const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-refresh-token`;
+const VERIFY_REFRESH_TOKEN_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify-refresh-token`;
 
 export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;
