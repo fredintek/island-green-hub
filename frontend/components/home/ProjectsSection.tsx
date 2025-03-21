@@ -1,60 +1,55 @@
 "use client";
 import React, { useEffect } from "react";
 import { Table, Switch } from "antd";
-import { ProjectHouse } from "@/utils/interfaces";
-import { ColumnsType } from "antd/es/table";
-import {
-  useGetAllProjectHouseQuery,
-  useUpdateIsHomePageMutation,
-} from "@/redux/api/projectHouseApiSlice";
 import { toast } from "react-toastify";
+import {
+  useGetPageBySlugQuery,
+  useUpdatePageMutation,
+} from "@/redux/api/pageApiSlice";
 
 type Props = {};
 
 const ProjectsSection = (props: Props) => {
   const {
-    data: getAllProjectHouseData,
-    isLoading: getAllProjectHouseIsLoading,
-    isError: getAllProjectHouseIsError,
-    error: getAllProjectHouseError,
-    refetch: getAllProjectHouseRefetch,
-  } = useGetAllProjectHouseQuery(undefined, {
+    data: getAllProjectsData,
+    isLoading: getAllProjectsIsLoading,
+    isError: getAllProjectsIsError,
+    error: getAllProjectsError,
+    refetch: getAllProjectsRefetch,
+  } = useGetPageBySlugQuery("projects", {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
   });
 
   const [
-    updateIsHomePageFn,
+    updatePageFn,
     {
-      isError: updateIsHomePageIsError,
-      isLoading: updateIsHomePageIsLoading,
-      isSuccess: updateIsHomePageIsSuccess,
-      error: updateIsHomePageError,
-      data: updateIsHomePageData,
+      isError: updatePageIsError,
+      isLoading: updatePageIsLoading,
+      isSuccess: updatePageIsSuccess,
+      error: updatePageError,
+      data: updatePageData,
     },
-  ] = useUpdateIsHomePageMutation();
+  ] = useUpdatePageMutation();
 
-  const handleSwitchIsHomePage = async (
-    record: ProjectHouse,
-    checkValue: boolean
-  ) => {
+  const handleSwitchIsHomePage = async (record: any, checkValue: boolean) => {
     try {
-      await updateIsHomePageFn({
-        projectHouseId: record.id,
-        isHomePage: checkValue,
+      await updatePageFn({
+        id: record?.id,
+        isProjectHomePage: checkValue,
       }).unwrap();
     } catch (error) {
       console.error(error);
     }
   };
 
-  const projectsColumn: ColumnsType<ProjectHouse> = [
+  const projectsColumn = [
     {
       title: "Title (tr)",
       dataIndex: "title",
       key: "titleTr",
-      render: (text, record) => {
+      render: (text: any, record: any) => {
         return <p>{text["tr"]}</p>;
       },
     },
@@ -62,7 +57,7 @@ const ProjectsSection = (props: Props) => {
       title: "Title (en)",
       dataIndex: "title",
       key: "titleEn",
-      render: (text, record) => {
+      render: (text: any, record: any) => {
         return <p>{text["en"]}</p>;
       },
     },
@@ -70,7 +65,7 @@ const ProjectsSection = (props: Props) => {
       title: "Title (ru)",
       dataIndex: "title",
       key: "titleRu",
-      render: (text, record) => {
+      render: (text: any, record: any) => {
         return <p>{text["ru"]}</p>;
       },
     },
@@ -78,10 +73,10 @@ const ProjectsSection = (props: Props) => {
       title: "Action",
       key: "action",
       dataIndex: "action",
-      render: (text, record) => (
+      render: (text: any, record: any) => (
         <Switch
-          loading={updateIsHomePageIsLoading}
-          defaultChecked={record?.isHomePage}
+          loading={updatePageIsLoading}
+          defaultChecked={record?.isProjectHomePage}
           onChange={(checked: boolean) => {
             handleSwitchIsHomePage(record, checked);
           }}
@@ -91,24 +86,19 @@ const ProjectsSection = (props: Props) => {
   ];
 
   useEffect(() => {
-    if (updateIsHomePageIsSuccess) {
-      toast.success(updateIsHomePageData.message);
-      getAllProjectHouseRefetch();
+    if (updatePageIsSuccess) {
+      toast.success("updated successfully");
+      getAllProjectsRefetch();
     }
 
-    if (updateIsHomePageIsError) {
-      const customError = updateIsHomePageError as {
+    if (updatePageIsError) {
+      const customError = updatePageError as {
         data: any;
         status: number;
       };
       toast.error(customError.data.message);
     }
-  }, [
-    updateIsHomePageIsSuccess,
-    updateIsHomePageIsError,
-    updateIsHomePageError,
-    updateIsHomePageData,
-  ]);
+  }, [updatePageIsSuccess, updatePageIsError, updatePageError, updatePageData]);
 
   return (
     <>
@@ -120,7 +110,7 @@ const ProjectsSection = (props: Props) => {
         {/* NEW PROJECTS SECTION */}
         <Table
           columns={projectsColumn}
-          dataSource={getAllProjectHouseData || []}
+          dataSource={getAllProjectsData?.subPages || []}
           scroll={{ x: 768 }}
           className=""
         />

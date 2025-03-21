@@ -1,17 +1,25 @@
 "use client";
-import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
-import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
-import { useUpdateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
+import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
 import {
-  useDeleteFileMutation,
-  useUploadFileMutation,
-} from "@/redux/api/sectionApiSlice";
+  ensureArray,
+  validateArray,
+} from "@/app/[locale]/dashboard/projects/add-project/page";
+import { baseUrl } from "@/constants";
+import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
+import {
+  useDeleteProjectHouseMutation,
+  useUpdateProjectHouseMutation,
+} from "@/redux/api/projectHouseApiSlice";
+import { useUploadFileMutation } from "@/redux/api/sectionApiSlice";
 import { prepareFileUpload } from "@/utils";
 import { Page } from "@/utils/interfaces";
-import { EditOutlined, InboxOutlined, PlusOutlined } from "@ant-design/icons";
-import { Form, Input, Modal, Upload } from "antd";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  InboxOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
+import { Form, Input, Modal, Popconfirm, Upload } from "antd";
 import Dragger from "antd/es/upload/Dragger";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
@@ -20,10 +28,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
+const ProjectHouse = ({ pageData }: Props) => {
   const [form] = Form.useForm();
   const params = useParams() as { locale: string; slug: string };
   // Dynamically load the ReactQuill component (to prevent SSR issues)
@@ -33,8 +40,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   );
   const [record, setRecord] = useState<any>(null);
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
-
-  const [projectHomeImageList, setProjectHomeImageList] = useState<any>([]);
   const [projectHouseGallery, setProjectHouseGallery] = useState<any>([]);
   const [projectHouseCoverImageFileList, setProjectHouseCoverImageFileList] =
     useState<any>([]);
@@ -43,27 +48,22 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     setProjectHouseDisplayImageFileList,
   ] = useState<any>([]);
 
-  const [isCoverImageUploadToCloud, setIsCoverImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isDisplayImageUploadToCloud, setIsDisplayImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isHomeImageUploadToCloud, setIsHomeImageUploadToCloud] =
-    useState<boolean>(false);
-  const [isGalleryImageUploadToCloud, setIsGalleryImageUploadToCloud] =
-    useState<boolean>(false);
-
   const { data: getPageBySlugData } = useGetPageBySlugQuery(params.slug, {
     refetchOnMountOrArgChange: true,
     refetchOnReconnect: true,
     refetchOnFocus: true,
   });
 
-  // console.log("getPageBySlugData", getPageBySlugData);
-
   const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
+    deleteProjectHouse,
+    {
+      isLoading: deleteProjectHouseLoading,
+      isError: deleteProjectHouseIsError,
+      error: deleteProjectHouseError,
+      data: deleteProjectHouseData,
+      isSuccess: deleteProjectHouseIsSuccess,
+    },
+  ] = useDeleteProjectHouseMutation();
 
   const [
     updateProjectHouseFn,
@@ -79,14 +79,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
   const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
     useUploadFileMutation();
 
-  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
-    useDeleteFileMutation();
-
-  const handleUploadChangeHomeImage = ({ fileList }: any) => {
-    setProjectHomeImageList(fileList);
-    form.setFieldsValue({ projectHomeImage: fileList });
-  };
-
   const handleUploadChangeProjectHouseCoverImage = ({ fileList }: any) => {
     setProjectHouseCoverImageFileList(fileList);
     form.setFieldsValue({ projectHouseCoverImage: fileList });
@@ -97,11 +89,15 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     form.setFieldsValue({ projectHouseDisplayImage: fileList });
   };
 
-  const handleSubmit = async (values: any) => {
-    const targetProjectHouse = getPageBySlugData?.projectHouse?.find(
-      (obj: any) => obj?.id === record?.id
-    );
+  const handleDeleteProjectHouse = async (id: number) => {
+    try {
+      await deleteProjectHouse(id).unwrap();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
+  const handleSubmit = async (values: any) => {
     const prepareUpload = (value: any, formData: FormData, tag: string) => {
       if (!value.url) {
         formData.append("files", value.originFileObj);
@@ -109,7 +105,7 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
         return null;
       }
-      return value.url;
+      return extractedPath(value.url);
     };
     try {
       let coverImageFormData = new FormData();
@@ -144,12 +140,16 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
       projectHouseCoverImage =
         typeof projectHouseCoverImage === "string"
-          ? projectHouseCoverImage
-          : projectHouseCoverImage?.projectHouseCoverImage;
+          ? extractedPath(projectHouseCoverImage)
+          : ensureArray(projectHouseCoverImage?.projectHouseCoverImage)?.map(
+              (item: string) => extractedPath(item)
+            );
       projectHouseDisplayImage =
         typeof projectHouseDisplayImage === "string"
-          ? projectHouseDisplayImage
-          : projectHouseDisplayImage?.projectHouseDisplayImage;
+          ? extractedPath(projectHouseDisplayImage)
+          : ensureArray(
+              projectHouseDisplayImage?.projectHouseDisplayImage
+            )?.map((item: string) => extractedPath(item));
 
       // project house gallery
       let galleryFormData = new FormData();
@@ -173,37 +173,12 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         );
       }
 
-      // project home gallery
-      let homeGalleryFormData = new FormData();
-      let homeGalleryImages: string[] = [];
-      for (const value of values.projectHomeImage) {
-        const arr = prepareUpload(
-          value,
-          homeGalleryFormData,
-          "projectHomeImage"
-        );
-
-        if (arr) {
-          homeGalleryImages.push(arr);
-        }
-      }
-      const isHomeGalleryFormDataEmpty = homeGalleryFormData
-        .entries()
-        .next().done;
-      if (!isHomeGalleryFormDataEmpty) {
-        const arr = await uploadFileFn(homeGalleryFormData).unwrap();
-        ensureArray(arr.projectHomeImage)?.forEach((img: string) =>
-          homeGalleryImages.push(img)
-        );
-      }
-
       // DATA
       const targetData = {
         id: record?.id,
-        coverImage: projectHouseCoverImage,
-        displayImage: projectHouseDisplayImage,
-        gallery: galleryImages,
-        homeImages: homeGalleryImages,
+        coverImage: ensureArray(projectHouseCoverImage)[0],
+        displayImage: ensureArray(projectHouseDisplayImage)[0],
+        gallery: validateArray(ensureArray(galleryImages)),
         title: {
           en: values.projectHouseTitleEn,
           tr: values.projectHouseTitleTr,
@@ -224,36 +199,11 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
           tr: values.optionalProjectFeaturesTr || "",
           ru: values.optionalProjectFeaturesRu || "",
         },
-        homeText: {
-          en: values.projectHomeContentEn,
-          tr: values.projectHomeContentTr,
-          ru: values.projectHomeContentRu,
-        },
       };
 
       await updateProjectHouseFn(targetData).unwrap();
       setIsOpenModal(false);
       setRecord(null);
-
-      // delete old files
-      await Promise.all(
-        targetProjectHouse?.homeImages?.map(async (content: string) => {
-          const target = content.split("uploads/").pop();
-          return await deleteFileFn({ filename: target }).unwrap();
-        })
-      );
-      await Promise.all(
-        targetProjectHouse?.gallery?.map(async (content: string) => {
-          const target = content.split("uploads/").pop();
-          return await deleteFileFn({ filename: target }).unwrap();
-        })
-      );
-      await deleteFileFn({
-        filename: targetProjectHouse?.coverImage?.split("uploads/").pop(),
-      }).unwrap();
-      await deleteFileFn({
-        filename: targetProjectHouse?.displayImage?.split("uploads/").pop(),
-      }).unwrap();
     } catch (error) {
       console.error(error);
     }
@@ -261,38 +211,30 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
 
   useEffect(() => {
     if (record) {
-      const coverImage = record.coverImage
+      const coverImage = `${baseUrl}${record.coverImage}`
         ? [
             {
-              url: record.coverImage,
-              uid: record.coverImage,
+              url: `${baseUrl}${record.coverImage}`,
+              uid: `${baseUrl}${record.coverImage}`,
               name: "image",
               status: "done",
             },
           ]
         : [];
-      const displayImage = record.displayImage
+      const displayImage = `${baseUrl}${record.displayImage}`
         ? [
             {
-              url: record.displayImage,
-              uid: record.displayImage,
+              url: `${baseUrl}${record.displayImage}`,
+              uid: `${baseUrl}${record.displayImage}`,
               name: "image",
               status: "done",
             },
           ]
-        : [];
-      const homeImages = record.homeImages
-        ? record?.homeImages?.map((img: any) => ({
-            url: img,
-            uid: img,
-            name: "image",
-            status: "done",
-          }))
         : [];
       const gallery = record.gallery
         ? record?.gallery?.map((img: any) => ({
-            url: img,
-            uid: img,
+            url: `${baseUrl}${img}`,
+            uid: `${baseUrl}${img}`,
             name: "image",
             status: "done",
           }))
@@ -311,11 +253,7 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
         optionalProjectFeaturesTr: record.optionalFeatures?.tr,
         optionalProjectFeaturesEn: record.optionalFeatures?.en,
         optionalProjectFeaturesRu: record.optionalFeatures?.ru,
-        projectHomeContentTr: record.homeText?.tr,
-        projectHomeContentEn: record.homeText?.en,
-        projectHomeContentRu: record.homeText?.ru,
         projectHouseGallery: gallery,
-        projectHomeImage: homeImages,
         projectHouseDisplayImage: displayImage,
         projectHouseCoverImage: coverImage,
       });
@@ -323,8 +261,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       setProjectHouseCoverImageFileList(coverImage);
 
       setProjectHouseDisplayImageFileList(displayImage);
-
-      setProjectHomeImageList(homeImages);
 
       setProjectHouseGallery(gallery);
     }
@@ -335,7 +271,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
       toast.success("Project house updated successfully");
       setIsOpenModal(false);
       setRecord(null);
-      refetchEditedData(getPageBySlugData?.slug);
     }
 
     if (updateProjectHouseIsError) {
@@ -357,18 +292,50 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
     updateProjectHouseData,
   ]);
 
+  useEffect(() => {
+    if (deleteProjectHouseIsSuccess) {
+      toast.success("Project house deleted successfully");
+    }
+
+    if (deleteProjectHouseIsError) {
+      const customErrorV1 = deleteProjectHouseError as {
+        data: any;
+        status: number;
+      };
+      const customErrorV2 = deleteProjectHouseError as {
+        message: string | string[];
+        error: string;
+        statusCode: number;
+      };
+      toast.error(customErrorV1.data.message || customErrorV2.message);
+    }
+  }, [
+    deleteProjectHouseIsSuccess,
+    deleteProjectHouseIsError,
+    deleteProjectHouseError,
+    deleteProjectHouseData,
+  ]);
+
   return (
     <>
       <div className="flex flex-wrap gap-6">
         {getPageBySlugData?.projectHouse?.map((obj: any) => (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-3">
             <p>{obj.title.en}</p>
-            <EditOutlined
-              onClick={() => {
-                setRecord(obj);
-                setIsOpenModal(true);
-              }}
-            />
+            <div className="flex items-center gap-1">
+              <EditOutlined
+                onClick={() => {
+                  setRecord(obj);
+                  setIsOpenModal(true);
+                }}
+              />
+              <Popconfirm
+                title="Are you sure?"
+                onConfirm={() => handleDeleteProjectHouse(obj?.id)}
+              >
+                <DeleteOutlined />
+              </Popconfirm>
+            </div>
           </div>
         ))}
       </div>
@@ -489,82 +456,6 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
               >
                 <PlusOutlined />
               </Upload>
-            </Form.Item>
-
-            {/* project home images */}
-            <Form.Item
-              label="Upload Project Home Images (2)"
-              name="projectHomeImage"
-              valuePropName="fileList"
-              getValueFromEvent={(e) => e?.fileList}
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Image is required!",
-                },
-              ]}
-            >
-              <Upload
-                name="file"
-                multiple={true}
-                beforeUpload={() => false}
-                listType="picture-card"
-                accept="image/*"
-                fileList={projectHomeImageList}
-                onChange={handleUploadChangeHomeImage}
-                maxCount={2}
-              >
-                <PlusOutlined />
-              </Upload>
-            </Form.Item>
-          </div>
-
-          {/* project home content */}
-          <div className="grid grid-cols-fluid-1 gap-4">
-            <Form.Item
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Content is required!",
-                },
-              ]}
-              label="Project Home Content(Turkish)"
-              name="projectHomeContentTr"
-            >
-              <ReactQuill
-                theme="snow"
-                placeholder="Enter project home content in Turkish"
-              />
-            </Form.Item>
-            <Form.Item
-              label="Project Home Content(English)"
-              name="projectHomeContentEn"
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Content is required!",
-                },
-              ]}
-            >
-              <ReactQuill
-                theme="snow"
-                placeholder="Enter project home content in English"
-              />
-            </Form.Item>
-            <Form.Item
-              rules={[
-                {
-                  required: true,
-                  message: "Project Home Content is required!",
-                },
-              ]}
-              label="Project Home Content(Russian)"
-              name="projectHomeContentRu"
-            >
-              <ReactQuill
-                theme="snow"
-                placeholder="Enter project home content in Russian"
-              />
             </Form.Item>
           </div>
 
@@ -735,15 +626,9 @@ const ProjectHouse = ({ pageData, refetchEditedData }: Props) => {
             onClick={() => form.submit()}
             type="button"
             className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
-            disabled={
-              uploadFileIsLoading ||
-              deleteFileIsLoading ||
-              updateProjectHouseIsLoading
-            }
+            disabled={uploadFileIsLoading || updateProjectHouseIsLoading}
           >
-            {uploadFileIsLoading ||
-            deleteFileIsLoading ||
-            updateProjectHouseIsLoading ? (
+            {uploadFileIsLoading || updateProjectHouseIsLoading ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (
               <p className="uppercase font-medium">Save</p>

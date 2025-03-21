@@ -8,10 +8,9 @@ import {
   useRemoveLinkFromSectionContentMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
 import { toast } from "react-toastify";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
+import { baseUrl } from "@/constants";
 
 const { Dragger } = Upload;
 
@@ -102,7 +101,7 @@ const ContactSection = (props: Props) => {
     try {
       await deleteFileFn({ filename: target }).unwrap();
       await removeLinkFn({
-        sectionId: getSectionData.data.id,
+        sectionId: getSectionData.id,
         link: filename,
       }).unwrap();
     } catch (error) {
@@ -125,8 +124,8 @@ const ContactSection = (props: Props) => {
         content: uploadedVideos,
       };
       await createSectionFn(data).unwrap();
-      if (getSectionData?.data?.content[0]) {
-        await handleDeleteVideo(getSectionData?.data?.content[0]);
+      if (getSectionData?.content[0]) {
+        await handleDeleteVideo(getSectionData?.content[0]);
       }
     } catch (error) {
       console.error("Error file upload:", error);
@@ -197,20 +196,24 @@ const ContactSection = (props: Props) => {
 
       {/* content */}
       <div className="">
-        {(getSectionData?.data?.content?.length as number) > 0 && (
-          <div className="bg-white dark:bg-[#1e293b] max-w-[300px] w-full aspect-video p-1 flex flex-col gap-2">
+        {(getSectionData?.content?.length as number) > 0 && (
+          <div
+            key={"khvcbdk"}
+            className="bg-white dark:bg-[#1e293b] max-w-[300px] w-full aspect-video p-1 flex flex-col gap-2"
+          >
             <p className="text-lg text-black dark:text-gray-300 font-medium capitalize">
               Existing Video
             </p>
-            {getSectionData?.data?.content?.map((url: string) => (
+            {getSectionData?.content?.map((url: string, idx: number) => (
               <>
                 <Popconfirm
+                  key={`${idx}-pop`}
                   title="Are you sure you want to"
                   onConfirm={() => handleDeleteVideo(url)}
                 >
                   <DeleteOutlined className="text-base self-end cursor-pointer text-red-500" />
                 </Popconfirm>
-                <div className="bg-gray-300 w-full h-full rounded-md">
+                <div key={idx} className="bg-gray-300 w-full h-full rounded-md">
                   <video
                     className="w-full block h-full object-cover rounded-md"
                     autoPlay
@@ -219,7 +222,7 @@ const ContactSection = (props: Props) => {
                     preload="none"
                     playsInline
                   >
-                    <source src={url} type="video/mp4" />
+                    <source src={`${baseUrl}${url}`} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>

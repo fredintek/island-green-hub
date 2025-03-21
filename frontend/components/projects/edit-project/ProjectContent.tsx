@@ -1,5 +1,7 @@
+import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
+import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
+import { baseUrl } from "@/constants";
 import {
-  useDeleteFileMutation,
   useGetSectionByPageIdQuery,
   useUpdateSectionMutation,
   useUploadFileMutation,
@@ -14,10 +16,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
+const ProjectContent = ({ pageData }: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)
   const ReactQuill = useMemo(
     () => dynamic(() => import("react-quill-new"), { ssr: false }),
@@ -27,10 +28,9 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
   const [form] = Form.useForm();
   const [projectFileList, setProjectFileList] = useState<any>([]);
   const [projectPdfList, setProjectPdfList] = useState<any>([]);
-  const [pageContentData, setPageContentData] = useState<any>({});
 
   const { data: getSectionByTypeData } = useGetSectionByPageIdQuery(
-    pageData?.id || pageContentData?.id,
+    pageData?.id as number,
     {
       refetchOnMountOrArgChange: true,
       refetchOnReconnect: true,
@@ -51,9 +51,6 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
 
   const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
     useUploadFileMutation();
-
-  const [deleteFileFn, { isLoading: deleteFileIsLoading }] =
-    useDeleteFileMutation();
 
   const handleUploadChange = ({ fileList }: any) => {
     setProjectFileList([fileList]);
@@ -98,12 +95,21 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
       if (!projectImages)
         projectImages = await uploadFileFn(imgFormData).unwrap();
 
+      console.log("projectImages", projectImages);
+
       // Ensure correct format after upload
-      pdfImage = typeof pdfImage === "string" ? pdfImage : pdfImage?.projectPdf;
+      pdfImage =
+        typeof pdfImage === "string"
+          ? extractedPath(pdfImage)
+          : ensureArray(pdfImage?.projectPdf)?.map((item: string) =>
+              extractedPath(item)
+            );
       projectImages =
         typeof projectImages === "string"
-          ? projectImages
-          : projectImages?.projectImages;
+          ? extractedPath(projectImages)
+          : ensureArray(projectImages?.projectImages)?.map((item: string) =>
+              extractedPath(item)
+            );
 
       /** Construct final data */
       const targetData = {
@@ -114,17 +120,12 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
             tr: values.projectContentTr,
             ru: values.projectContentRu,
           },
-          image: projectImages,
-          pdf: pdfImage,
+          image: ensureArray(projectImages)[0],
+          pdf: ensureArray(pdfImage)[0],
         },
       };
+      console.log("targetData", targetData);
       await updateSectionFn(targetData).unwrap();
-      await Promise.all(
-        filesToDelete?.map(async (filename) => {
-          const target = filename.split("uploads/").pop();
-          return await deleteFileFn({ filename: target }).unwrap();
-        })
-      );
     } catch (error) {
       console.error("Error uploading files:", error);
     }
@@ -137,37 +138,37 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
     if (targetSection) {
       setProjectFileList([
         {
-          uid: targetSection?.content?.image,
+          uid: `${baseUrl}${targetSection?.content?.image}`,
           name: "image",
           status: "done",
-          url: targetSection?.content?.image,
+          url: `${baseUrl}${targetSection?.content?.image}`,
         },
       ]);
 
       setProjectPdfList([
         {
-          uid: targetSection?.content?.pdf,
+          uid: `${baseUrl}${targetSection?.content?.pdf}`,
           name: "pdf",
           status: "done",
-          url: targetSection?.content?.pdf,
+          url: `${baseUrl}${targetSection?.content?.pdf}`,
         },
       ]);
 
       form.setFieldsValue({
         projectImages: [
           {
-            uid: targetSection?.content?.image,
+            uid: `${baseUrl}${targetSection?.content?.image}`,
             name: "image",
             status: "done",
-            url: targetSection?.content?.image,
+            url: `${baseUrl}${targetSection?.content?.image}?t=${Date.now()}`,
           },
         ],
         projectPdf: [
           {
-            uid: targetSection?.content?.pdf,
+            uid: `${baseUrl}${targetSection?.content?.pdf}`,
             name: "pdf",
             status: "done",
-            url: targetSection?.content?.pdf,
+            url: `${baseUrl}${targetSection?.content?.pdf}`,
           },
         ],
         projectContentTr: targetSection?.content?.description?.tr,
@@ -180,7 +181,6 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updateSectionIsSuccess) {
       toast.success("Project Content updated successfully");
-      refetchEditedData(getSectionByTypeData?.data?.page?.slug);
     }
 
     if (updateSectionIsError) {
@@ -201,14 +201,6 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
     updateSectionError,
     updateSectionData,
   ]);
-
-  useEffect(() => {
-    if (pageData) {
-      setPageContentData(pageData);
-    }
-  }, [pageData]);
-
-  if (!getSectionByTypeData?.data) return null;
   return (
     <Form onFinish={handleSubmit} form={form} layout="vertical">
       <div className="flex flex-col gap-10">
@@ -313,13 +305,9 @@ const ProjectContent = ({ pageData, refetchEditedData }: Props) => {
         onClick={() => form.submit()}
         type="button"
         className="ml-auto px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
-        disabled={
-          uploadFileIsLoading || updateSectionIsLoading || deleteFileIsLoading
-        }
+        disabled={uploadFileIsLoading || updateSectionIsLoading}
       >
-        {uploadFileIsLoading ||
-        updateSectionIsLoading ||
-        deleteFileIsLoading ? (
+        {uploadFileIsLoading || updateSectionIsLoading ? (
           <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
         ) : (
           <p className="uppercase font-medium">Save</p>

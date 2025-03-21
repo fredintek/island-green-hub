@@ -9,23 +9,10 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProductLink = ({ pageData, refetchEditedData }: Props) => {
+const ProductLink = ({ pageData }: Props) => {
   const [form] = Form.useForm();
-
-  const {
-    data: getSectionByTypeData,
-    isLoading: getSectionByTypeIsLoading,
-    isError: getSectionByTypeIsError,
-    isSuccess: getSectionByTypeIsSuccess,
-    error: getSectionByTypeError,
-  } = useGetSectionByTypeQuery("productLink", {
-    refetchOnMountOrArgChange: true,
-    refetchOnReconnect: true,
-    refetchOnFocus: true,
-  });
 
   const [
     updateSectionFn,

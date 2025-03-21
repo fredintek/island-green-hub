@@ -9,24 +9,22 @@ import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Popconfirm, Table, Tooltip } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { useLocale } from "next-intl";
+import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 import { toast } from "react-toastify";
 
 type Props = {};
 
 const page = (props: Props) => {
-  const locale = useLocale();
-  const {
-    data: getAllPageBySlugData,
-    isLoading: getAllPageBySlugIsLoading,
-    isError: getAllPageBySlugIsError,
-    error: getAllPageBySlugError,
-    refetch: getAllPageBySlugRefetch,
-  } = useGetPageBySlugQuery("projects", {
-    refetchOnMountOrArgChange: true,
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
-  });
+  // const locale = useLocale();
+  const nextPath = usePathname();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
+  const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
+    useGetPageBySlugQuery("projects", {
+      refetchOnMountOrArgChange: true,
+      refetchOnFocus: true,
+      refetchOnReconnect: true,
+    });
 
   const [
     deleteBulkProjectFn,
@@ -114,13 +112,22 @@ const page = (props: Props) => {
           Project Section
         </p>
 
-        <Link
-          href={`projects/add-project`}
-          className="mb-4 w-fit px-6 py-2 rounded-md text-white cursor-pointer flex gap-2 items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
-        >
-          <PlusOutlined className="text-lg" />
-          <p className="uppercase font-medium text-sm">Add Page</p>
-        </Link>
+        <div className="flex gap-4 items-center">
+          <Link
+            href={`projects/add-project`}
+            className="mb-4 w-fit px-6 py-2 rounded-md text-white cursor-pointer flex gap-2 items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
+          >
+            <PlusOutlined className="text-lg" />
+            <p className="uppercase font-medium text-sm">Add Page</p>
+          </Link>
+          <Link
+            href={`projects/add-project-house`}
+            className="mb-4 w-fit px-6 py-2 rounded-md text-white cursor-pointer flex gap-2 items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
+          >
+            <PlusOutlined className="text-lg" />
+            <p className="uppercase font-medium text-sm">Add Project House</p>
+          </Link>
+        </div>
         <Table
           columns={projectColumn}
           dataSource={getAllPageBySlugData?.subPages || []}

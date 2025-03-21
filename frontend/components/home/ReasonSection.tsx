@@ -59,7 +59,7 @@ const ReasonSection = (props: Props) => {
   const handleEdit = (record: Reason) => {
     setEditingReason(record);
     setOpenModal(true);
-    setReasonIndex(getSectionData?.data?.content.indexOf(record));
+    setReasonIndex(getSectionData?.content.indexOf(record));
   };
 
   const handleFormSubmit = async (values: any) => {
@@ -77,7 +77,7 @@ const ReasonSection = (props: Props) => {
       icon: values.icon,
     };
 
-    const existingContent = getSectionData?.data?.content || [];
+    const existingContent = getSectionData?.content || [];
 
     // Find and update the existing object if it exists
     const updatedContent = existingContent.map((item: any, index: number) => {
@@ -188,7 +188,7 @@ const ReasonSection = (props: Props) => {
         {/* content */}
         <Table
           columns={reasonsColumn}
-          dataSource={getSectionData?.data?.content || []}
+          dataSource={getSectionData?.content || []}
           scroll={{ x: 768 }}
         />
       </div>

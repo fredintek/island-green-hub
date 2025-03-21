@@ -10,14 +10,19 @@ import { Page } from "@/utils/interfaces";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table } from "antd";
 import { ColumnsType } from "antd/es/table";
-import { useLocale } from "next-intl";
+import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import slugify from "slugify";
 
 type Props = {};
 
+export const splitText = (target: string | string[]): string =>
+  Array.isArray(target) ? target?.join(",") : target;
+
 const page = (props: Props) => {
-  const locale = useLocale();
+  const nextPath = usePathname();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
   const [form] = Form.useForm();
   const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
   const [record, setRecord] = useState<any>(null);
@@ -87,7 +92,7 @@ const page = (props: Props) => {
       if (record) {
         const targetData = {
           id: record?.id,
-          sectionType: `${record?.slug}-360`,
+          sectionType: `${slugify(record?.title?.en)}-degree-view`,
           title: {
             tr: values.pageTitleTr,
             en: values.pageTitleEn,
@@ -152,9 +157,9 @@ const page = (props: Props) => {
         pageTitleTr: record.title.tr,
         pageTitleEn: record.title.en,
         pageTitleRu: record.title.ru,
-        productLink: record.sections.find((obj: any) =>
-          obj.type.includes(record?.title?.en)
-        ).content,
+        productLink: record.sections.find(
+          (obj: any) => obj.type === `${slugify(record?.title?.en)}-degree-view`
+        )?.content,
       });
     }
   }, [record, form]);
@@ -170,7 +175,7 @@ const page = (props: Props) => {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(splitText(customError.data.message));
     }
   }, [
     createBulk360PageIsSuccess,
@@ -190,7 +195,7 @@ const page = (props: Props) => {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(splitText(customError.data.message));
     }
   }, [
     updateBulk360PageIsSuccess,
@@ -210,7 +215,7 @@ const page = (props: Props) => {
         data: any;
         status: number;
       };
-      toast.error(customError.data.message);
+      toast.error(splitText(customError.data.message));
     }
   }, [deletePageIsSuccess, deletePageIsError, deletePageError, deletePageData]);
 

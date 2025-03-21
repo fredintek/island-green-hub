@@ -36,7 +36,7 @@ export const getFileUpload = async (file: Express.Multer.File) => {
     // Write the resized image to the file system
     fs.writeFileSync(filePath, resizedImage);
   }
-  return `${process.env.API_URL}/uploads/${filename}`;
+  return `/uploads/${filename}`;
 };
 
 export const deleteServerFile = (filename: string): boolean => {

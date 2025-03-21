@@ -8,4 +8,8 @@ export class UpdateBulkAboutPageDto extends PartialType(
   @IsNotEmpty()
   @IsInt()
   id: number;
+
+  @IsNotEmpty()
+  @IsInt()
+  sectionId: number;
 }

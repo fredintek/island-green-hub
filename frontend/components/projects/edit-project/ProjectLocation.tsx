@@ -3,16 +3,16 @@ import {
   useUpdateSectionMutation,
 } from "@/redux/api/sectionApiSlice";
 import { Page } from "@/utils/interfaces";
-import { Form, Input } from "antd";
+import { InfoCircleOutlined } from "@ant-design/icons";
+import { Form, Input, Tooltip } from "antd";
 import React, { useEffect } from "react";
 import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProjectLocation = ({ pageData, refetchEditedData }: Props) => {
+const ProjectLocation = ({ pageData }: Props) => {
   const [form] = Form.useForm();
 
   const { data: getSectionByTypeData } = useGetSectionByTypeQuery(
@@ -57,7 +57,6 @@ const ProjectLocation = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updateSectionIsSuccess) {
       toast.success("Location updated successfully");
-      refetchEditedData(getSectionByTypeData?.data?.page?.slug);
     }
 
     if (updateSectionIsError) {
@@ -81,11 +80,18 @@ const ProjectLocation = ({ pageData, refetchEditedData }: Props) => {
 
   return (
     <Form layout="vertical" onFinish={handleSubmit} form={form}>
-      <Form.Item label="Project Location" name="projectLocation">
-        <Input
-          size="large"
-          placeholder="Enter project location from google maps"
-        />
+      <Form.Item
+        label={
+          <span>
+            Project Location{" "}
+            <Tooltip title="Enter latitude and longitude separated by a comma (e.g., 40.7128,-74.0060)">
+              <InfoCircleOutlined style={{ color: "#1890ff" }} />
+            </Tooltip>
+          </span>
+        }
+        name="projectLocation"
+      >
+        <Input size="large" placeholder="Latitude,Longitude" />
       </Form.Item>
 
       <button

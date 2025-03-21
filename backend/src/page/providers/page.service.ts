@@ -20,6 +20,8 @@ import { Update360PageDto } from '../dtos/update-360-page.dto';
 import { CreateBulkAboutPageDto } from '../dtos/create-about-page.dto';
 import { UpdateBulkAboutPageDto } from '../dtos/update-about-page.dto';
 import { deleteServerFile } from 'src/utils/uploadFileToSystem';
+import { IsHomePageDto } from 'src/project-house/dtos/is-home-page.dto';
+import slugify from 'slugify';
 
 @Injectable()
 export class PageService {
@@ -110,6 +112,8 @@ export class PageService {
       const projectPage = queryRunner.manager.create(Page, {
         title: createBulkProjectDto.projectTitle,
         parentPage,
+        projectHomeText: createBulkProjectDto.projectHomeContent,
+        projectHomeImages: createBulkProjectDto.projectHomeImage,
       });
 
       await queryRunner.manager.save(projectPage);
@@ -184,8 +188,6 @@ export class PageService {
         displayImage: createBulkProjectDto.projectHouseDisplayImage,
         generalInfo: createBulkProjectDto.projectGeneralInfo,
         features: createBulkProjectDto.projectFeatures,
-        homeText: createBulkProjectDto.projectHomeContent,
-        homeImages: createBulkProjectDto.projectHomeImage,
         optionalFeatures: createBulkProjectDto.optionalProjectFeatures,
         gallery: createBulkProjectDto.projectHouseGallery,
       });
@@ -235,6 +237,7 @@ export class PageService {
       const newPage = queryRunner.manager.create(Page, {
         title: create360PageDto.title,
         parentPage,
+        slug: `${slugify(create360PageDto?.title?.en)}-degree-view`,
       });
 
       await queryRunner.manager.save(newPage);
@@ -242,7 +245,7 @@ export class PageService {
       // create section for the new page with product link
       const productLinkSection = await queryRunner.manager.create(Section, {
         page: newPage,
-        type: `${create360PageDto.title.en}-360`,
+        type: `${slugify(create360PageDto?.title?.en)}-degree-view`,
         sortId: 0,
         content: create360PageDto.productLink,
       });
@@ -348,6 +351,7 @@ export class PageService {
       }
 
       targetPage.title = update360PageDto.title || targetPage.title;
+      targetPage.slug = `${slugify(targetPage?.title?.en)}-degree-view`;
       await queryRunner.manager.save(targetPage);
 
       // get section with the section type and update the section
@@ -363,6 +367,7 @@ export class PageService {
 
       sectionToUpdate.content =
         update360PageDto.productLink || sectionToUpdate.content;
+      sectionToUpdate.type = `${slugify(targetPage?.title?.en)}-degree-view`;
       await queryRunner.manager.save(sectionToUpdate);
 
       // now commit and return
@@ -412,7 +417,7 @@ export class PageService {
 
       // get section with the section type and update the section
       const sectionToUpdate = await queryRunner.manager.findOne(Section, {
-        where: { type: updateBulkAboutPageDto.sectionType },
+        where: { id: updateBulkAboutPageDto.sectionId },
       });
 
       if (!sectionToUpdate) {
@@ -501,13 +506,30 @@ export class PageService {
     return page;
   }
 
-  public async fetchAllPages() {
+  public async fetchAllPages(fetchllPagesDto?: {
+    isProjectHomePage?: boolean;
+    onlyParent?: boolean;
+  }) {
+    // Destructure DTO values safely
+    const { isProjectHomePage, onlyParent } = fetchllPagesDto || {};
+
+    // Define where conditions dynamically
+    const whereCondition: any = {};
+
+    if (onlyParent) {
+      whereCondition.parentPage = IsNull();
+    }
+
+    if (isProjectHomePage !== undefined) {
+      whereCondition.isProjectHomePage = isProjectHomePage;
+    }
+
+    // Fetch pages based on conditions
     const pages = await this.pageRepository.find({
-      relations: ['subPages', 'sections'],
-      where: {
-        parentPage: IsNull(),
-      },
+      relations: ['subPages', 'sections', 'projectHouse'],
+      where: whereCondition,
     });
+
     return pages;
   }
 
@@ -547,14 +569,6 @@ export class PageService {
           for (const galleryItem of projectHouse.gallery) {
             if (galleryItem) {
               const target = galleryItem.split('uploads/').pop() || '';
-              await deleteServerFile(target);
-            }
-          }
-        }
-        if (projectHouse.homeImages) {
-          for (const homeImage of projectHouse.homeImages) {
-            if (homeImage) {
-              const target = homeImage.split('uploads/').pop() || '';
               await deleteServerFile(target);
             }
           }

@@ -3,6 +3,7 @@ import {
   useCreatePageMutation,
   useDeletePageMutation,
   useGetPageBySlugQuery,
+  useLazyGetPageByIdQuery,
   useUpdatePageMutation,
 } from "@/redux/api/pageApiSlice";
 import {
@@ -19,17 +20,37 @@ import {
   useCreateSectionMutation,
   useDeleteFileMutation,
   useLazyGetSectionByPageIdQuery,
-  useRemoveLinkFromSectionContentMutation,
   useUpdateSectionMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { toast } from "react-toastify";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
-import { stripHtml } from "@/utils";
 import { ensureArray } from "../projects/add-project/page";
+import { usePathname } from "next/navigation";
+import { baseUrl } from "@/constants";
 const { Dragger } = Upload;
 
 type Props = {};
+
+// const modules = {
+//   toolbar: [
+//     [{ font: [] }],
+//     [{ size: [] }],
+//     ["bold", "italic", "underline", "strike"],
+//     [{ color: [] }, { background: [] }],
+//     [{ script: "sub" }, { script: "super" }],
+//     [{ header: "1" }, { header: "2" }, "blockquote", "code-block"],
+//     [{ list: "ordered" }, { list: "bullet" }],
+//     [{ indent: "-1" }, { indent: "+1" }],
+//     [{ direction: "rtl" }],
+//     [{ align: [] }],
+//     ["link", "image", "video"],
+//     ["clean"],
+//   ],
+// };
+
+export const extractedPath = (url: string) =>
+  `/uploads/${url.split("/uploads/")[1]}`;
 
 const page = (props: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)
@@ -37,10 +58,10 @@ const page = (props: Props) => {
     () => dynamic(() => import("react-quill-new"), { ssr: false }),
     []
   );
-  const locale = useLocale();
+  const nextPath = usePathname();
+  const locale = nextPath.split("/")[1] as "en" | "tr" | "ru";
   const [form] = Form.useForm();
   const [openModal, setOpenModal] = useState(false);
-  const [uploadinToCloud, setUploadinToCloud] = useState(false);
   const [blogFileList, setBlogFileList] = useState<any>([]);
   const [editingPage, setEditingPage] = useState<any | null>(null);
   const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
@@ -61,6 +82,8 @@ const page = (props: Props) => {
       data: createPageData,
     },
   ] = useCreatePageMutation();
+
+  const [getPageByIdFn] = useLazyGetPageByIdQuery();
 
   const [updatePageFn, { isLoading: updatePageIsLoading }] =
     useUpdatePageMutation();
@@ -97,11 +120,6 @@ const page = (props: Props) => {
     },
   ] = useUpdateSectionMutation();
 
-  const [
-    deleteFileFromCloudinaryFn,
-    { isLoading: deleteFileFromCloudinaryIsLoading },
-  ] = useDeleteFileFromCloudinaryMutation();
-
   const [uploadFileFn, { isLoading: uploadFileIsLoading }] =
     useUploadFileMutation();
 
@@ -123,10 +141,10 @@ const page = (props: Props) => {
     setOpenModal(true);
     setBlogFileList(
       targetSection?.content?.blogImages?.map((img: any) => ({
-        uid: img,
+        uid: `${baseUrl}${img}`,
         name: "image",
         status: "done",
-        url: img,
+        url: `${baseUrl}${img}`,
       }))
     );
     form.setFieldsValue({
@@ -140,10 +158,10 @@ const page = (props: Props) => {
       blogContentEn: targetSection?.content?.blogContent?.en,
       blogContentRu: targetSection?.content?.blogContent?.ru,
       blogImages: targetSection?.content?.blogImages?.map((img: any) => ({
-        uid: img,
+        uid: `${baseUrl}${img}`,
         name: "image",
         status: "done",
-        url: img,
+        url: `${baseUrl}${img}`,
       })),
     });
   };
@@ -162,7 +180,7 @@ const page = (props: Props) => {
 
           return null;
         }
-        return value.url;
+        return extractedPath(value.url);
       };
       try {
         let formData = new FormData();
@@ -194,7 +212,7 @@ const page = (props: Props) => {
         }).unwrap();
         // update section for target page
         if (updatedPage?.id) {
-          const updatedSection = await updateSectionFn({
+          await updateSectionFn({
             id: editingPage?.sectionId,
             page: updatedPage?.id,
             type: `${values.blogTitleEn}-blogContent`,
@@ -206,23 +224,13 @@ const page = (props: Props) => {
                 ru: values.blogTitleRu,
               },
               blogContent: {
-                tr: stripHtml(values.blogTitleTr),
-                en: stripHtml(values.blogTitleEn),
-                ru: stripHtml(values.blogTitleRu),
+                tr: values.blogContentTr,
+                en: values.blogContentEn,
+                ru: values.blogContentRu,
               },
               blogImages,
             },
           }).unwrap();
-
-          if (updatedSection?.content) {
-            // delete old images
-            Promise.all(
-              editingPage?.content?.blogImages?.map(async (img: string) => {
-                const target = img.split("uploads/").pop();
-                await deleteFileFn({ filename: target }).unwrap();
-              })
-            );
-          }
         }
 
         setOpenModal(false);
@@ -262,9 +270,9 @@ const page = (props: Props) => {
                 ru: values.blogTitleRu,
               },
               blogContent: {
-                tr: stripHtml(values.blogTitleTr),
-                en: stripHtml(values.blogTitleEn),
-                ru: stripHtml(values.blogTitleRu),
+                tr: values.blogContentTr,
+                en: values.blogContentEn,
+                ru: values.blogContentRu,
               },
               blogImages: await uploadFileFn(formData).unwrap(),
             },

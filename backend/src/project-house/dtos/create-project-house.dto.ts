@@ -95,12 +95,12 @@ export class CreateProjectHouseDto {
   @IsString({ each: true })
   gallery?: string[];
 
-  @IsNotEmpty()
+  @IsOptional()
   @ValidateNested()
   @Type(() => MultilingualTextDto)
   homeText: MultilingualTextDto;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString({ each: true })
   homeImages: string[];
 }

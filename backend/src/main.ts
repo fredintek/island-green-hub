@@ -13,7 +13,11 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: ['http://localhost:4001', 'http://localhost:3001'],
+    origin: [
+      'http://192.168.129.223:4001',
+      'http://192.168.129.223:3000',
+      'http://192.168.129.223:3001',
+    ],
     credentials: true,
   });
   app.use(express.json());

@@ -24,7 +24,7 @@ import { User } from 'src/user/user.entity';
           },
         },
         defaults: {
-          from: `"NestJS Tutorial" <${configService.get('mail.fromEmail')}>`,
+          from: `Islandgreen construction <${configService.get('mail.fromEmail')}>`,
         },
         template: {
           dir: join(__dirname, 'templates'),

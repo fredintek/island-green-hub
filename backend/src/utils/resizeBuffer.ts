@@ -13,8 +13,6 @@ export const resizeImage = async (
   // Resize the image to a maximum width of 1200 pixels and maintain aspect ratio
   let resizedImage = await sharp(fileBuffer)
     .resize({
-      width: 1200,
-      height: 1200,
       fit: sharp.fit.inside,
       withoutEnlargement: true,
       withoutReduction: true,
@@ -32,8 +30,6 @@ export const resizeImage = async (
       quality -= 10;
       resizedImage = await sharp(fileBuffer)
         .resize({
-          width: 1200,
-          height: 1200,
           fit: sharp.fit.inside,
           withoutEnlargement: true,
           withoutReduction: true,

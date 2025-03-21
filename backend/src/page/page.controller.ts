@@ -4,9 +4,11 @@ import {
   Delete,
   Get,
   Param,
+  ParseBoolPipe,
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { PageService } from './providers/page.service';
 import { CreatePageDto } from './dtos/create-page.dto';
@@ -75,8 +77,13 @@ export class PageController {
 
   @Get()
   @Auth(AuthType.None)
-  fetchAllPages() {
-    return this.pageService.fetchAllPages();
+  fetchAllPages(
+    @Query('isProjectHomePage', new ParseBoolPipe({ optional: true }))
+    isProjectHomePage?: boolean,
+    @Query('onlyParent', new ParseBoolPipe({ optional: true }))
+    onlyParent?: boolean,
+  ) {
+    return this.pageService.fetchAllPages({ isProjectHomePage, onlyParent });
   }
 
   @Get(':id')

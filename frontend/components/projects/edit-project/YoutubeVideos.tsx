@@ -10,10 +10,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const YoutubeVideos = ({ pageData, refetchEditedData }: Props) => {
+const YoutubeVideos = ({ pageData }: Props) => {
   const [form] = Form.useForm();
   const [videoLinks, setVideoLinks] = useState<string[]>([""]);
 
@@ -79,7 +78,6 @@ const YoutubeVideos = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updateSectionIsSuccess) {
       toast.success("Videos updated successfully");
-      refetchEditedData(getSectionByTypeData?.data?.page?.slug);
     }
 
     if (updateSectionIsError) {

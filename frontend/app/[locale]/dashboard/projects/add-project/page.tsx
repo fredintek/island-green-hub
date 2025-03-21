@@ -52,13 +52,6 @@ const page = (props: Props) => {
   ] = useState<any>([]);
   const [stage2Images, setStage2Images] = useState<any>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([""]);
-  const [cloudLoading1, setCloudLoading1] = useState<boolean>(false);
-  const [cloudLoading2, setCloudLoading2] = useState<boolean>(false);
-  const [cloudLoading3, setCloudLoading3] = useState<boolean>(false);
-  const [cloudLoading4, setCloudLoading4] = useState<boolean>(false);
-  const [cloudLoading5, setCloudLoading5] = useState<boolean>(false);
-  const [cloudLoading6, setCloudLoading6] = useState<boolean>(false);
-  const [cloudLoading7, setCloudLoading7] = useState<boolean>(false);
   const [form] = Form.useForm();
 
   const { data: getAllPageBySlugData, refetch: getAllPageBySlugRefetch } =
@@ -89,17 +82,6 @@ const page = (props: Props) => {
       data: uploadFileData,
     },
   ] = useUploadFileMutation();
-
-  const [
-    deleteFileFn,
-    {
-      isError: deleteFileIsError,
-      isLoading: deleteFileIsLoading,
-      isSuccess: deleteFileIsSuccess,
-      error: deleteFileError,
-      data: deleteFileData,
-    },
-  ] = useDeleteFileMutation();
 
   const handleUploadChange = ({ fileList }: any) => {
     setProjectFileList(fileList);
@@ -211,7 +193,9 @@ const page = (props: Props) => {
           ru: values.projectHouseTitleRu,
           tr: values.projectHouseTitleTr,
         },
-        projectHomeImage: ensureArray(uploadedFiles["projectHomeImage"]),
+        projectHomeImage: validateArray(
+          ensureArray(uploadedFiles["projectHomeImage"])
+        ),
         projectHouseCoverImage: uploadedFiles["projectHouseCoverImage"],
         projectHouseDisplayImage: uploadedFiles["projectHouseDisplayImage"],
         projectHomeContent: {
@@ -234,8 +218,10 @@ const page = (props: Props) => {
           ru: values.optionalProjectFeaturesRu,
           tr: values.optionalProjectFeaturesTr,
         },
-        projectHouseGallery: ensureArray(uploadedFiles["projectHouseGallery"]),
-        stage2Images: ensureArray(uploadedFiles["stage2Images"]),
+        projectHouseGallery: validateArray(
+          ensureArray(uploadedFiles["projectHouseGallery"])
+        ),
+        stage2Images: validateArray(ensureArray(uploadedFiles["stage2Images"])),
         projectLocation: values.projectLocation,
         youtubeVideos: validateArray(values.youtubeVideos),
       };
@@ -890,26 +876,10 @@ const page = (props: Props) => {
           <button
             onClick={() => form.submit()}
             type="button"
-            disabled={
-              createBulkProjectIsLoading ||
-              cloudLoading1 ||
-              cloudLoading2 ||
-              cloudLoading3 ||
-              cloudLoading4 ||
-              cloudLoading5 ||
-              cloudLoading6 ||
-              cloudLoading7
-            }
+            disabled={createBulkProjectIsLoading || uploadFileIsLoading}
             className="ml-auto mt-4 px-6 py-2 rounded-md text-white cursor-pointer flex items-center justify-center bg-secondaryShade dark:bg-primaryShade border border-secondaryShade dark:border-primaryShade hover:bg-transparent hover:text-secondaryShade dark:hover:bg-transparent dark:hover:text-primaryShade transition-colors duration-300"
           >
-            {createBulkProjectIsLoading ||
-            cloudLoading1 ||
-            cloudLoading2 ||
-            cloudLoading3 ||
-            cloudLoading4 ||
-            cloudLoading5 ||
-            cloudLoading6 ||
-            cloudLoading7 ? (
+            {createBulkProjectIsLoading || uploadFileIsLoading ? (
               <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div> // Spinner
             ) : (
               <p className="uppercase font-medium">Submit</p>

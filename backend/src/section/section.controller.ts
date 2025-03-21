@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   NotFoundException,
@@ -9,6 +10,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
@@ -46,8 +48,9 @@ export class SectionController {
    * Upload Images to server
    */
   @Post('upload-file')
+  @Auth(AuthType.None)
   @UseInterceptors(
-    FilesInterceptor('files', 20, {
+    FilesInterceptor('files', 500, {
       storage: memoryStorage(),
       fileFilter: (req, file, cb) => {
         if (
@@ -64,7 +67,7 @@ export class SectionController {
         }
       },
       limits: {
-        fileSize: 1024 * 1024 * 10, // 10MB
+        fileSize: 1024 * 1024 * 100, // 10MB
       },
     }),
   )
@@ -166,7 +169,11 @@ export class SectionController {
    */
   @Get('type/:sectionType')
   @Auth(AuthType.None)
-  getSingleSectionByType(@Param('sectionType') sectionType: string) {
-    return this.sectionService.getSingleSectionByType(sectionType);
+  getSingleSectionByType(
+    @Param('sectionType') sectionType: string,
+    @Query('pageId', new ParseIntPipe({ optional: true }))
+    pageId: number | null,
+  ) {
+    return this.sectionService.getSingleSectionByType(sectionType, pageId);
   }
 }

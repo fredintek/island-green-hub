@@ -41,10 +41,7 @@ export class CommunicationService {
   public async getAllCommunication() {
     const communication = await this.communicationRepository.find({});
 
-    return {
-      message: 'Communication retrieved successfully',
-      data: communication,
-    };
+    return communication;
   }
 
   /**

@@ -1,4 +1,5 @@
 "use client";
+import { baseUrl } from "@/constants";
 import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
   useCreateBulkAboutPageMutation,
@@ -19,6 +20,7 @@ import { useLocale } from "next-intl";
 import dynamic from "next/dynamic";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { extractedPath } from "../blog/page";
 
 type Props = {};
 
@@ -113,8 +115,12 @@ const page = (props: Props) => {
   };
 
   const handleSubmit = async (values: any) => {
+    const targetSection = record?.sections?.find(
+      (obj: any) => obj.type === record?.title?.en
+    );
     try {
       if (record) {
+        console.log("values", values);
         let formData = new FormData();
         if (values?.contentImage[0]?.originFileObj) {
           formData.append("files", values?.contentImage[0]?.originFileObj);
@@ -133,21 +139,12 @@ const page = (props: Props) => {
               ru: values.pageContentRu,
             },
             image: values?.contentImage[0]?.url
-              ? [values?.contentImage[0]?.url]
+              ? [extractedPath(values?.contentImage[0]?.url)]
               : await uploadFileFn(formData).unwrap(),
           },
           sectionType: values.pageTitleEn,
+          sectionId: targetSection?.id,
         };
-
-        const targetSection = record?.sections?.find(
-          (obj: any) => obj.type === record?.title?.en
-        );
-
-        if (!values?.contentImage[0]?.url) {
-          const filename = targetSection?.content?.image[0];
-          const target = filename.split("uploads/").pop();
-          await deleteFileFn({ filename: target }).unwrap();
-        }
         await updateBulkAboutPageFn(targetData).unwrap();
       } else {
         const formData = new FormData();
@@ -225,7 +222,7 @@ const page = (props: Props) => {
             uid: 1,
             name: "image",
             status: "done",
-            url: targetSection?.content?.image[0],
+            url: `${baseUrl}${targetSection?.content?.image[0]}`,
           },
         ],
       });

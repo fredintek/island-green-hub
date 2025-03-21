@@ -6,10 +6,9 @@ import { toast } from "react-toastify";
 
 type Props = {
   pageData?: Partial<Page>;
-  refetchEditedData?: any;
 };
 
-const ProjectTitle = ({ pageData, refetchEditedData }: Props) => {
+const ProjectTitle = ({ pageData }: Props) => {
   const [form] = Form.useForm();
 
   const [
@@ -51,7 +50,6 @@ const ProjectTitle = ({ pageData, refetchEditedData }: Props) => {
   useEffect(() => {
     if (updatePageIsSuccess) {
       toast.success("Title updated successfully");
-      refetchEditedData(updatePageData?.slug);
     }
 
     if (updatePageIsError) {
