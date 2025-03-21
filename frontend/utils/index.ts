@@ -19,13 +19,6 @@ export const equalValues = (first: any, second: any) => {
   return true;
 };
 
-export const getImagePath = (filename: string) => {
-  // const backendUrl = process.env.NEXT_PUBLIC_BASE_URL;
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-
-  return `${backendUrl}/uploads/${filename}`;
-};
-
 export const prepareFileUpload = (
   values: any,
   key: string,
@@ -45,3 +38,24 @@ export const prepareFileUpload = (
   }
   return values[key][0]?.url; // Return existing URL if available
 };
+
+export const extractedPath = (url: string) =>
+  `/uploads/${url.split("/uploads/")[1]}`;
+
+export const splitText = (target: string | string[]): string =>
+  Array.isArray(target) ? target?.join(",") : target;
+
+export const validateArray = (
+  arr: any[] | undefined | null
+): any[] | undefined => {
+  if (
+    !arr ||
+    arr.every((item) => item === undefined || item === null || item === "")
+  ) {
+    return undefined;
+  }
+  return arr;
+};
+
+export const ensureArray = (value: any) =>
+  Array.isArray(value) ? value : [value];

@@ -15,7 +15,7 @@ export const pageApiSlice = apiSlice.injectEndpoints({
     }),
     // Get Page by Slug
     getPageBySlug: builder.query({
-      query: (slug: string) => `/page/name/${slug}`,
+      query: (slug) => `/page/name/${slug}`,
     }),
     // Create a new Page
     createPage: builder.mutation({

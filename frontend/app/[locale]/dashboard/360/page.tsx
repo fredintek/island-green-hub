@@ -6,6 +6,7 @@ import {
   useDeletePageMutation,
   useUpdateBulk360PageMutation,
 } from "@/redux/api/pageApiSlice";
+import { splitText } from "@/utils";
 import { Page } from "@/utils/interfaces";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table } from "antd";
@@ -16,9 +17,6 @@ import { toast } from "react-toastify";
 import slugify from "slugify";
 
 type Props = {};
-
-export const splitText = (target: string | string[]): string =>
-  Array.isArray(target) ? target?.join(",") : target;
 
 const page = (props: Props) => {
   const nextPath = usePathname();

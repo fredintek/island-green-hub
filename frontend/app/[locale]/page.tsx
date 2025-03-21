@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 
-export default async function LocaleRedirect({
-  params,
-}: {
-  params: { locale: string };
-}) {
-  const { locale } = await params;
+type Params = Promise<{ locale: string }>;
+
+export default async function LocaleRedirect(props: { params: Params }) {
+  const locale = (await props.params).locale;
   redirect(`/${locale}/dashboard`);
 }

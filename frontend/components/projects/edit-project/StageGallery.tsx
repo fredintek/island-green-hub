@@ -1,15 +1,11 @@
-import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
-import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { baseUrl } from "@/constants";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
 import {
   useDeleteFileMutation,
   useGetSectionByPageIdQuery,
-  useGetSectionByTypeQuery,
   useUpdateSectionMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
+import { ensureArray, extractedPath } from "@/utils";
 import { Page } from "@/utils/interfaces";
 import { InboxOutlined } from "@ant-design/icons";
 import { Form } from "antd";

@@ -1,12 +1,10 @@
-import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
-import { ensureArray } from "@/app/[locale]/dashboard/projects/add-project/page";
 import { baseUrl } from "@/constants";
 import {
   useGetSectionByPageIdQuery,
   useUpdateSectionMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
-import { prepareFileUpload } from "@/utils";
+import { ensureArray, extractedPath, prepareFileUpload } from "@/utils";
 import { Page } from "@/utils/interfaces";
 import { PlusOutlined } from "@ant-design/icons";
 import { Form, Upload } from "antd";

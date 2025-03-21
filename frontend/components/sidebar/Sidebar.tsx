@@ -1,5 +1,5 @@
 "use client";
-import { Link, usePathname } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { useAppSelector } from "@/redux/store";
 import {
   FolderOutlined,
@@ -12,7 +12,7 @@ import {
   RotateLeftOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { ConfigProvider, Menu, Popconfirm, Tooltip } from "antd";
+import { ConfigProvider, Menu, Popconfirm } from "antd";
 import React, { JSX, useEffect, useState } from "react";
 import { useGetAllPagesQuery } from "@/redux/api/pageApiSlice";
 import { Page } from "@/utils/interfaces";

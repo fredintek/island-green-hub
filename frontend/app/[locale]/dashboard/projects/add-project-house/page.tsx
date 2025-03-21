@@ -1,11 +1,9 @@
 "use client";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import { useCreateProjectHouseMutation } from "@/redux/api/projectHouseApiSlice";
-import {
-  useDeleteFileMutation,
-  useUploadFileMutation,
-} from "@/redux/api/sectionApiSlice";
+import { useUploadFileMutation } from "@/redux/api/sectionApiSlice";
 import { useAppSelector } from "@/redux/store";
+import { ensureArray, validateArray } from "@/utils";
 import { InboxOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Select, Upload } from "antd";
 import Dragger from "antd/es/upload/Dragger";
@@ -15,21 +13,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 type Props = {};
-
-export const validateArray = (
-  arr: any[] | undefined | null
-): any[] | undefined => {
-  if (
-    !arr ||
-    arr.every((item) => item === undefined || item === null || item === "")
-  ) {
-    return undefined;
-  }
-  return arr;
-};
-
-export const ensureArray = (value: any) =>
-  Array.isArray(value) ? value : [value];
 
 const page = (props: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)

@@ -13,7 +13,6 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table, Tooltip, Upload } from "antd";
-import { useLocale } from "next-intl";
 import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
@@ -24,10 +23,9 @@ import {
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
 import { toast } from "react-toastify";
-import { useDeleteFileFromCloudinaryMutation } from "@/redux/api/cloudinaryApiSlice";
-import { ensureArray } from "../projects/add-project/page";
 import { usePathname } from "next/navigation";
 import { baseUrl } from "@/constants";
+import { ensureArray, extractedPath } from "@/utils";
 const { Dragger } = Upload;
 
 type Props = {};
@@ -48,9 +46,6 @@ type Props = {};
 //     ["clean"],
 //   ],
 // };
-
-export const extractedPath = (url: string) =>
-  `/uploads/${url.split("/uploads/")[1]}`;
 
 const page = (props: Props) => {
   // Dynamically load the ReactQuill component (to prevent SSR issues)

@@ -12,6 +12,7 @@ import {
   useDeleteFileMutation,
   useUploadFileMutation,
 } from "@/redux/api/sectionApiSlice";
+import { extractedPath } from "@/utils";
 import { Page } from "@/utils/interfaces";
 import { DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import { Form, Input, Modal, Popconfirm, Table, Upload } from "antd";
@@ -20,7 +21,6 @@ import { useLocale } from "next-intl";
 import dynamic from "next/dynamic";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { extractedPath } from "../blog/page";
 
 type Props = {};
 

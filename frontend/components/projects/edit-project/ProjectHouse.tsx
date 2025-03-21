@@ -1,9 +1,4 @@
 "use client";
-import { extractedPath } from "@/app/[locale]/dashboard/blog/page";
-import {
-  ensureArray,
-  validateArray,
-} from "@/app/[locale]/dashboard/projects/add-project/page";
 import { baseUrl } from "@/constants";
 import { useGetPageBySlugQuery } from "@/redux/api/pageApiSlice";
 import {
@@ -11,7 +6,12 @@ import {
   useUpdateProjectHouseMutation,
 } from "@/redux/api/projectHouseApiSlice";
 import { useUploadFileMutation } from "@/redux/api/sectionApiSlice";
-import { prepareFileUpload } from "@/utils";
+import {
+  ensureArray,
+  extractedPath,
+  prepareFileUpload,
+  validateArray,
+} from "@/utils";
 import { Page } from "@/utils/interfaces";
 import {
   DeleteOutlined,
