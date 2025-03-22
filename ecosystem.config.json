@@ -1,0 +1,25 @@
+{
+    "apps": [
+        {
+            "name": "island-green-api",
+            "cwd": "/home/island-green-hub/backend",
+            "script": "dist/main.js"
+        },
+        {
+            "name": "island-green-frontend-admin",
+            "cwd": "/home/island-green-hub/frontend",
+            "script": "start",
+            "env": {
+                "PORT": "4001"
+            }
+        },
+        {
+            "name": "island-green-website",
+            "cwd": "/home/island-green-hub/website",
+            "script": "next start",
+            "env": {
+                "PORT": "3001"
+            }
+        }
+    ]
+}

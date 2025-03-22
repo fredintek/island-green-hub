@@ -95,7 +95,7 @@ export class AuthService {
       httpOnly:
         this.configService.get('appConfig.environment') === 'production',
       secure: this.configService.get('appConfig.environment') === 'production', // Use secure cookies in production
-      sameSite: 'strict',
+      sameSite: 'none',
       path: '/',
       maxAge:
         Number(this.configService.get('jwt.refreshTokenMaxAge')) *
@@ -103,6 +103,7 @@ export class AuthService {
         60 *
         60 *
         1000,
+      domain: '.fredintek.com'
     });
 
     const { password, resetToken, resetTokenExpiration, ...displayUser } = user;
@@ -120,9 +121,10 @@ export class AuthService {
       httpOnly:
         this.configService.get('appConfig.environment') === 'production',
       secure: this.configService.get('appConfig.environment') === 'production',
-      sameSite: 'strict',
+      sameSite: 'none',
       path: '/',
       expires: new Date(0), // Expire the cookie immediately
+      domain: '.fredintek.com'
     });
 
     return res.status(200).json({
