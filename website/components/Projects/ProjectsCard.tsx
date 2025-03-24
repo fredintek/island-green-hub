@@ -29,7 +29,7 @@ const ProjectsCard = ({ data }: Props) => {
           <div className="relative group project-card-front bg-primaryShadeLight text-white flex items-center justify-center rounded-md">
             {/* link */}
             <Link
-              href={`/projects/${data?.parentPage}/project-house/${data?.projectHouseId}`}
+              href={`${data?.parentPage}/project-house/${data?.projectHouseId}`}
               className="absolute top-4 right-4 bg-black grid place-items-center p-3 cursor-pointer rounded-full scale-0 group-hover:scale-100 transition-transform duration-1000 delay-300"
             >
               <LinkOutlined className="text-white text-2xl" />
