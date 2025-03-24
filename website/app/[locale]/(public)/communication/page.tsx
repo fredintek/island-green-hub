@@ -204,7 +204,7 @@ const page = (props: Props) => {
                   </FormItem>
                 </div>
 
-                <div className="flex justify-center">
+                <div className="flex justify-center gap-2">
                   {/* CTA */}
                   <AnimatedBtn
                     children={
@@ -231,6 +231,23 @@ const page = (props: Props) => {
                       </div>
                     }
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (consultExpertLoading) {
+                        return;
+                      } else {
+                        return form.resetFields();
+                      }
+                    }}
+                    className="bg-grayShade font-semibold text-white py-2 px-8 grid place-items-center rounded-md cursor-pointer"
+                  >
+                    {consultExpertLoading ? (
+                      <div className="animate-spin border-t-2 border-white border-solid rounded-full w-5 h-5"></div>
+                    ) : (
+                      <p>{t("CLEAR")}</p>
+                    )}
+                  </button>
                 </div>
               </Form>
             </ConfigProvider>

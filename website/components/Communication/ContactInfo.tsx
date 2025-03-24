@@ -25,7 +25,7 @@ const ContactInfo = ({ icon, items, isSideBorder = false }: Props) => {
         />
       </div>
       <div
-        className="text-grayShade font-medium [&>*]:cursor-pointer flex flex-col gap-3"
+        className="text-grayShade font-medium [&>*]:cursor-pointer flex flex-col gap-3 text-center"
         dangerouslySetInnerHTML={{ __html: items }}
       />
       {/* {items?.map((item, idx) => {
