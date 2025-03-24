@@ -13,10 +13,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: [
-      'https://admin-islandgreen.fredintek.com',
-      'https://islandgreen.fredintek.com',
-    ],
+    origin: configService.get('appConfig.cors_origin').split(','),
     credentials: true,
   });
   app.use(express.json());
