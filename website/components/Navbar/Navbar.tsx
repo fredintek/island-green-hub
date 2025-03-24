@@ -296,7 +296,7 @@ const Navbar = (props: Props) => {
                           href={
                             subPage?.link
                               ? `/${subPage?.link}`
-                              : `/${subPage?.slug}` || "#"
+                              : `/${page?.slug}/${subPage?.slug}` || "#"
                           }
                         >
                           <span className="">{subPage?.title[locale]}</span>
@@ -409,7 +409,7 @@ const Navbar = (props: Props) => {
       >
         <ul className="flex flex-col items-center text-primaryShade gap-6 w-full h-full p-4">
           {getAllPagesData?.map((page: any) => {
-            const extraSubPages = getExtraPages("about");
+            const extraSubPages = getExtraPages(page?.slug);
             const subPages = [...(page?.subPages || []), ...extraSubPages];
             return subPages?.length > 0 ? (
               // Render accordion for items with children
@@ -439,7 +439,7 @@ const Navbar = (props: Props) => {
                               href={
                                 subPage?.link
                                   ? `/${subPage?.link}`
-                                  : `/${subPage?.slug}` || "#"
+                                  : `/${page?.slug}/${subPage?.slug}` || "#"
                               }
                             >
                               <p
@@ -465,7 +465,9 @@ const Navbar = (props: Props) => {
                 <Link
                   href={page?.slug === "home" ? "/" : `/${page?.slug}` || "#"}
                 >
-                  {page?.title[locale]}
+                  <p onClick={() => setIsNavOpen(false)}>
+                    {page?.title[locale]}
+                  </p>
                 </Link>
               </li>
             );

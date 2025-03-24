@@ -37,7 +37,6 @@ const page = (props: Props) => {
         refetchOnMountOrArgChange: true,
       }
     );
-
   const [
     sendNewsLetterFn,
     {
@@ -113,7 +112,7 @@ const page = (props: Props) => {
                     key={idx}
                     index={idx + 1}
                     data={{
-                      href: page?.slug,
+                      href: `/projects/${page?.slug}`,
                       images: page?.projectHomeImages,
                       text: page?.projectHomeText,
                       title: page?.title,

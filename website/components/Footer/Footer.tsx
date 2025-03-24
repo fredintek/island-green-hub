@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import DashedText from "../common/DashedText";
-import { footerBlog, footerProjects } from "./FooterData";
 import { Link } from "@/i18n/routing";
 import {
   FacebookFilled,
@@ -64,7 +63,9 @@ const Footer = (props: Props) => {
                       key={`${subPage.id}`}
                       className="text-base text-secondaryShade"
                     >
-                      <Link href={subPage.slug}>{subPage?.title[locale]}</Link>
+                      <Link href={`/${projectData?.slug}/${subPage.slug}`}>
+                        {subPage?.title[locale]}
+                      </Link>
                     </div>
                   );
                 })}
@@ -87,7 +88,9 @@ const Footer = (props: Props) => {
                       key={`${subPage.id}`}
                       className="text-base text-secondaryShade"
                     >
-                      <Link href={subPage.slug}>{subPage?.title[locale]}</Link>
+                      <Link href={`/${blogData?.slug}/${subPage.slug}`}>
+                        {subPage?.title[locale]}
+                      </Link>
                     </div>
                   );
                 })}

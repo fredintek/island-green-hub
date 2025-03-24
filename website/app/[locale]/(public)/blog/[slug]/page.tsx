@@ -11,16 +11,15 @@ const page = (props: Props) => {
   const params = useParams();
   const nextPath = usePathname();
   const locale = nextPath?.split("/")[1] as "en" | "tr" | "ru";
-  const { data: getPageBySlug } = useGetPageBySlugQuery(
-    params?.slug as string,
-    {
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-      refetchOnMountOrArgChange: true,
-    }
-  );
+  const { data: getPageBySlug } = useGetPageBySlugQuery(String(params?.slug), {
+    refetchOnFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMountOrArgChange: true,
+  });
 
-  const blogContent = getPageBySlug?.sections[0];
+  const blogContent = getPageBySlug?.sections?.find((section: any) =>
+    section?.type.includes("blogContent")
+  );
   const textDescription = splitByBr(blogContent?.content?.blogContent[locale]);
 
   return (
